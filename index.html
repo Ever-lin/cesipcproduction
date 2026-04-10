@@ -7,9 +7,22 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-:root{--bg:#0f1117;--sur:#181c27;--sur2:#1e2436;--sur3:#252b3d;--bdr:#2d3554;--bdr2:#3a4260;--acc:#5b8dee;--acc2:#43d9a0;--acc3:#f0a84a;--acc4:#c678dd;--red:#e06c75;--txt:#d4daf5;--txt2:#8892b8;--txt3:#515d8a;}
+
+/* ── DESIGN TOKENS ── */
+:root {
+  --bg:#0f1117; --sur:#181c27; --sur2:#1e2436; --sur3:#252b3d;
+  --bdr:#2d3554; --bdr2:#3a4260;
+  --acc:#5b8dee; --acc2:#43d9a0; --acc3:#f0a84a; --acc4:#c678dd;
+  --red:#e06c75; --txt:#d4daf5; --txt2:#8892b8; --txt3:#515d8a;
+  /* Solution doc colors (matches original docx) */
+  --sol-navy:#0C2340; --sol-blue:#1B5EA6; --sol-teal:#007A6E;
+  --sol-body:#1A2733; --sol-muted:#6B7E94;
+  --sol-light:#DDEAF7; --sol-pale:#F2F5F8;
+}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;font-size:14px;line-height:1.6;}
+
+/* ── SHELL UI ── */
 .hdr{background:var(--sur);border-bottom:1px solid var(--bdr);padding:13px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:300;gap:12px;}
 .hdr-brand{display:flex;align-items:center;gap:12px;}
 .logo{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#5b8dee,#c678dd);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0;}
@@ -32,22 +45,17 @@ body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--txt)
 .swrap input:focus{border-color:var(--acc);}
 .swrap .si{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--txt3);font-size:14px;}
 .fsel{background:var(--sur);border:1px solid var(--bdr);color:var(--txt);padding:8px 12px;border-radius:7px;font-size:12.5px;font-family:inherit;cursor:pointer;outline:none;}
-.fsel:focus{border-color:var(--acc);}
 .cnt{font-size:12px;color:var(--txt3);padding:8px 4px;}
 .stats{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
 .stat{background:var(--sur);border:1px solid var(--bdr);border-radius:9px;padding:11px 16px;}
 .stat-lbl{font-size:10.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;font-weight:600;}
 .stat-val{font-size:20px;font-weight:700;font-family:'JetBrains Mono',monospace;margin-top:2px;}
-/* TABLE */
 .tbl-wrap{background:var(--sur);border:1px solid var(--bdr);border-radius:10px;overflow:auto;}
 table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;}
 thead th{background:var(--sur2);padding:10px 13px;text-align:left;font-weight:600;font-size:11px;color:var(--txt3);letter-spacing:.4px;text-transform:uppercase;border-bottom:1px solid var(--bdr);white-space:nowrap;position:relative;overflow:hidden;}
-thead th.sortable{cursor:pointer;}
-thead th.sortable:hover{color:var(--txt2);}
+thead th.sortable{cursor:pointer;}thead th.sortable:hover{color:var(--txt2);}
 thead th.sa::after{content:' ▲';font-size:9px;}thead th.sd::after{content:' ▼';font-size:9px;}
-/* Column resize handle */
-.col-resize{position:absolute;right:0;top:0;bottom:0;width:4px;cursor:col-resize;background:transparent;}
-.col-resize:hover,.col-resize.dragging{background:var(--acc);}
+.col-resize{position:absolute;right:0;top:0;bottom:0;width:4px;cursor:col-resize;background:transparent;}.col-resize:hover,.col-resize.dragging{background:var(--acc);}
 tbody tr{border-bottom:1px solid var(--bdr);transition:background .12s;cursor:pointer;}
 tbody tr:last-child{border-bottom:none;}tbody tr:hover{background:var(--sur2);}
 tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -59,7 +67,6 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
 .t-gld{background:rgba(240,168,74,.12);color:var(--acc3);border:1px solid rgba(240,168,74,.22);}
 .t-pur{background:rgba(198,120,221,.12);color:var(--acc4);border:1px solid rgba(198,120,221,.22);}
 .t-org{background:rgba(255,160,60,.1);color:#ffa03c;border:1px solid rgba(255,160,60,.2);}
-/* COLUMN CONFIG PANEL */
 .col-config{background:var(--sur);border:1px solid var(--bdr);border-radius:10px;padding:14px 16px;margin-bottom:16px;display:none;}
 .col-config.open{display:block;}
 .col-config-title{font-size:12px;font-weight:700;color:var(--txt2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;}
@@ -68,7 +75,11 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
 .col-chip.on{background:rgba(91,141,238,.15);color:var(--acc);border-color:rgba(91,141,238,.3);}
 .col-chip.off{background:transparent;color:var(--txt3);}
 .col-chip:hover{border-color:var(--acc);}
-/* EDIT MODAL */
+.sol-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600;}
+.sol-badge.zh{background:rgba(91,141,238,.15);color:var(--acc);border:1px solid rgba(91,141,238,.25);}
+.sol-badge.en{background:rgba(67,217,160,.12);color:var(--acc2);border:1px solid rgba(67,217,160,.22);}
+
+/* ── EDIT MODAL ── */
 .ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:400;align-items:flex-start;justify-content:center;padding:28px 20px;backdrop-filter:blur(3px);overflow-y:auto;}
 .ov.open{display:flex;}
 .modal{background:var(--sur);border:1px solid var(--bdr);border-radius:13px;max-width:980px;width:100%;animation:mIn .2s ease;position:relative;margin:auto;}
@@ -78,6 +89,10 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
 .mcls{background:none;border:none;color:var(--txt2);font-size:20px;cursor:pointer;padding:2px 7px;border-radius:5px;line-height:1;}
 .mcls:hover{background:var(--sur2);color:var(--txt);}
 .mbody{padding:18px 22px 22px;max-height:80vh;overflow-y:auto;}
+.modal-tabs{display:flex;gap:4px;margin-bottom:18px;border-bottom:1px solid var(--bdr);padding-bottom:0;}
+.modal-tab{padding:8px 16px;font-size:13px;font-weight:500;color:var(--txt3);border-bottom:2px solid transparent;cursor:pointer;margin-bottom:-1px;}
+.modal-tab:hover{color:var(--txt2);}.modal-tab.active{color:var(--acc);border-bottom-color:var(--acc);}
+.modal-panel{display:none;}.modal-panel.active{display:block;}
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
 .fgrp{display:flex;flex-direction:column;gap:5px;}.fgrp.full{grid-column:1/-1;}
 .flbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.55px;color:var(--txt3);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
@@ -89,11 +104,112 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
 .mfooter{display:flex;gap:9px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid var(--bdr);}
 .dyn-fields{border-top:1px solid var(--bdr);margin-top:4px;padding-top:12px;}
 .dyn-field-label{font-size:11px;font-weight:700;color:var(--acc4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
-/* SELECTION */
+
+/* ── SOLUTION EDITOR PANEL ── */
+.sol-editor-wrap{display:flex;flex-direction:column;gap:14px;}
+.sol-lang-tabs{display:flex;gap:0;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;width:fit-content;}
+.sol-lang-tab{padding:7px 18px;font-size:12.5px;font-weight:500;cursor:pointer;font-family:inherit;border:none;background:transparent;color:var(--txt2);transition:all .15s;}
+.sol-lang-tab.active{background:var(--acc);color:#fff;}
+.sol-hint{font-size:12px;color:var(--txt3);line-height:1.6;padding:10px 14px;background:rgba(91,141,238,.07);border:1px solid rgba(91,141,238,.15);border-radius:7px;}
+.sol-fields{display:flex;flex-direction:column;gap:12px;}
+.sol-field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.sol-section{background:var(--sur2);border:1px solid var(--bdr);border-radius:8px;padding:14px;}
+.sol-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--acc);margin-bottom:10px;}
+.sol-feature-item{background:var(--sur);border:1px solid var(--bdr);border-radius:7px;padding:12px;margin-bottom:8px;position:relative;}
+.sol-feature-item:last-child{margin-bottom:0;}
+.sol-feature-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--txt3);margin-bottom:6px;}
+.sol-add-btn{width:100%;padding:8px;background:rgba(91,141,238,.08);border:1px dashed rgba(91,141,238,.3);border-radius:6px;color:var(--acc);font-size:12px;cursor:pointer;font-family:inherit;margin-top:8px;transition:all .15s;}
+.sol-add-btn:hover{background:rgba(91,141,238,.15);}
+.sol-rm-btn{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--txt3);cursor:pointer;font-size:14px;line-height:1;padding:2px 5px;border-radius:4px;}
+.sol-rm-btn:hover{background:rgba(224,108,117,.15);color:var(--red);}
+.sol-table-row{display:flex;gap:8px;margin-bottom:6px;}
+.sol-table-row:last-child{margin-bottom:0;}
+.sol-table-row .fi{flex:1;}
+
+/* ── SOLUTION PREVIEW MODAL ── */
+.sol-view-modal{background:#fff;border:1px solid #e5e7eb;border-radius:13px;max-width:820px;width:100%;animation:mIn .2s ease;position:relative;margin:auto;max-height:92vh;display:flex;flex-direction:column;}
+.sol-view-hdr{padding:14px 22px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;}
+.sol-view-hdr-title{font-size:15px;font-weight:700;color:var(--sol-navy);}
+.sol-view-hdr-sub{font-size:12px;color:var(--sol-muted);margin-top:2px;}
+.sol-view-actions{display:flex;gap:8px;align-items:center;}
+.sol-view-body{overflow-y:auto;flex:1;padding:0;}
+
+/* ── SOLUTION DOCUMENT (faithful to docx design) ── */
+.sol-doc{font-family:'Noto Sans SC','Arial',sans-serif;color:var(--sol-body);font-size:13.5px;line-height:1.75;background:#fff;padding:36px 40px 48px;}
+
+/* Title block */
+.sol-doc-product{font-size:28px;font-weight:700;color:var(--sol-navy);line-height:1.2;margin-bottom:6px;}
+.sol-doc-subtitle{font-size:16px;font-weight:700;color:var(--sol-blue);margin-bottom:6px;}
+.sol-doc-tagline{font-size:10.5px;color:var(--sol-muted);margin-bottom:28px;letter-spacing:.3px;}
+
+/* Section heading with blue bottom border */
+.sol-sec-hdr{display:flex;align-items:baseline;gap:6px;border-bottom:2.5px solid var(--sol-blue);padding-bottom:6px;margin-top:28px;margin-bottom:14px;}
+.sol-sec-num{font-size:15px;font-weight:700;color:var(--sol-blue);}
+.sol-sec-title{font-size:14px;font-weight:700;color:var(--sol-navy);}
+
+/* Sub-section heading */
+.sol-sub-hdr{display:flex;align-items:center;gap:6px;margin-top:18px;margin-bottom:10px;}
+.sol-sub-mark{color:var(--sol-teal);font-size:13px;}
+.sol-sub-title{font-size:12.5px;font-weight:700;color:var(--sol-navy);}
+
+/* Body text */
+.sol-body-p{font-size:10px;color:var(--sol-body);margin-bottom:8px;}
+
+/* Feature card: number + content */
+.sol-card{display:flex;margin-bottom:6px;border-bottom:1px solid #e5e7eb;}
+.sol-card-num{width:44px;flex-shrink:0;background:var(--sol-navy);color:#fff;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:12px 4px;font-family:'Arial',sans-serif;}
+.sol-card-body{flex:1;padding:10px 14px;}
+.sol-card-title{font-size:10px;font-weight:700;color:var(--sol-navy);margin-bottom:5px;}
+.sol-card-desc{font-size:9.5px;color:var(--sol-body);margin-bottom:5px;line-height:1.6;}
+.sol-card-quote{font-size:9px;font-style:italic;color:var(--sol-teal);}
+
+/* Pain points table */
+.sol-pain-table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:9.5px;}
+.sol-pain-table thead th{background:var(--sol-navy);color:#fff;padding:8px 10px;text-align:left;font-weight:700;}
+.sol-pain-table thead th:first-child{width:36px;}
+.sol-pain-table tbody td{padding:8px 10px;vertical-align:top;}
+.sol-pain-table tbody tr:nth-child(odd) td:nth-child(2){background:var(--sol-light);}
+.sol-pain-table tbody tr:nth-child(odd) td:nth-child(3){background:var(--sol-pale);}
+.sol-pain-table .icon-cell{background:var(--sol-navy);color:#fff;text-align:center;font-size:13px;width:36px;}
+.sol-pain-table .prob-cell{font-weight:700;color:var(--sol-navy);}
+.sol-pain-table .desc-cell{color:var(--sol-body);}
+
+/* Spec table */
+.sol-spec-table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:9.5px;}
+.sol-spec-table thead th{background:var(--sol-navy);color:#fff;padding:8px 10px;text-align:left;font-weight:700;}
+.sol-spec-table tbody td{padding:8px 10px;}
+.sol-spec-table tbody tr:nth-child(odd) td:first-child{background:var(--sol-light);}
+.sol-spec-table tbody tr:nth-child(odd) td:last-child{background:var(--sol-pale);}
+.sol-spec-table .label-cell{font-weight:700;color:var(--sol-navy);}
+.sol-spec-table .val-cell{color:var(--sol-body);}
+
+/* Use-case list */
+.sol-usecase-item{display:flex;gap:10px;border-bottom:1px solid #e5e7eb;padding:10px 0;}
+.sol-usecase-item:last-child{border-bottom:none;}
+.sol-usecase-icon{font-size:16px;flex-shrink:0;width:28px;text-align:center;padding-top:2px;}
+.sol-usecase-content{}
+.sol-usecase-title{font-size:10px;font-weight:700;color:var(--sol-navy);margin-bottom:3px;}
+.sol-usecase-desc{font-size:9.5px;color:var(--sol-body);margin-bottom:3px;}
+.sol-usecase-sys{font-size:9px;color:var(--sol-blue);}
+
+/* Summary comparison */
+.sol-summary-table{width:100%;border-collapse:collapse;font-size:9.5px;}
+.sol-summary-table thead th:first-child{background:var(--sol-navy);color:#fff;padding:8px 10px;font-weight:700;}
+.sol-summary-table thead th:last-child{background:var(--sol-blue);color:#fff;padding:8px 10px;font-weight:700;}
+.sol-summary-table tbody td:first-child{background:var(--sol-pale);color:var(--sol-body);padding:7px 10px;}
+.sol-summary-table tbody td:last-child{background:#fff;color:var(--sol-teal);padding:7px 10px;font-weight:500;}
+
+/* Contact section */
+.sol-contact{margin-top:10px;font-size:9.5px;color:var(--sol-body);}
+
+/* Footer */
+.sol-footer{margin-top:32px;padding-top:10px;border-top:1px solid #ccc;text-align:center;font-size:8px;color:var(--sol-muted);}
+
+/* ── SELECTION ── */
 .sel-layout{display:grid;grid-template-columns:265px 1fr;gap:16px;align-items:start;}
 .sel-sidebar{background:var(--sur);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;position:sticky;top:80px;}
 .sel-sbar-hdr{padding:11px 14px;font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--bdr);background:var(--sur2);display:flex;align-items:center;justify-content:space-between;}
-.cat-btn{width:100%;padding:10px 14px;background:none;border:none;border-bottom:1px solid var(--bdr);cursor:pointer;text-align:left;font-family:inherit;font-size:13px;font-weight:500;color:var(--txt2);display:flex;align-items:center;gap:8px;transition:all .15s;position:relative;}
+.cat-btn{width:100%;padding:10px 14px;background:none;border:none;border-bottom:1px solid var(--bdr);cursor:pointer;text-align:left;font-family:inherit;font-size:13px;font-weight:500;color:var(--txt2);display:flex;align-items:center;gap:8px;transition:all .15s;}
 .cat-btn:last-child{border-bottom:none;}.cat-btn:hover{background:var(--sur2);color:var(--txt);}
 .cat-btn.active{background:rgba(91,141,238,.1);color:var(--acc);}
 .cpill{font-size:10px;background:var(--sur2);color:var(--txt3);padding:1px 6px;border-radius:10px;min-width:20px;text-align:center;}
@@ -103,16 +219,14 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
 .cat-action{padding:2px 5px;font-size:11px;border-radius:4px;border:1px solid var(--bdr);background:transparent;color:var(--txt3);cursor:pointer;line-height:1.4;}
 .cat-action:hover{background:var(--sur3);color:var(--txt);}
 .cat-action.danger:hover{background:rgba(224,108,117,.15);color:var(--red);border-color:rgba(224,108,117,.3);}
-.add-cat-row{padding:10px 12px;border-top:1px solid var(--bdr);}
 .sel-content{background:var(--sur);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;}
 .sel-c-hdr{padding:13px 18px;border-bottom:1px solid var(--bdr);}
 .sel-c-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px;}
 .sub-hdr-wrap{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;}
-.sub-hdr-text{font-size:11.5px;color:var(--txt3);line-height:1.55;white-space:pre-wrap;flex:1;cursor:pointer;}
-.sub-hdr-text:hover{color:var(--txt2);}
+.sub-hdr-text{font-size:11.5px;color:var(--txt3);line-height:1.55;white-space:pre-wrap;flex:1;}
 .sub-hdr-edit{min-height:60px;font-size:12.5px;flex:1;display:none;}
 .sub-hdr-btns{display:none;gap:6px;align-items:center;}
-.sel-list{}.sel-item{border-bottom:1px solid var(--bdr);padding:12px 18px;display:flex;gap:10px;transition:background .12s;}
+.sel-item{border-bottom:1px solid var(--bdr);padding:12px 18px;display:flex;gap:10px;transition:background .12s;}
 .sel-item:last-child{border-bottom:none;}.sel-item:hover{background:var(--sur2);}
 .snum{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--txt3);min-width:22px;padding-top:2px;font-weight:600;}
 .sbody{flex:1;min-width:0;}
@@ -128,7 +242,8 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
 .add-row textarea{flex:1;background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:8px 11px;border-radius:7px;font-size:13px;font-family:inherit;outline:none;resize:vertical;min-height:55px;line-height:1.65;}
 .add-row textarea:focus{border-color:var(--acc);}
 .empty-sel{padding:28px;text-align:center;color:var(--txt3);font-size:13px;}
-/* REF DRAWER */
+
+/* ── DRAWERS & MISC ── */
 .ref-drawer{position:fixed;inset:0;z-index:500;display:none;align-items:flex-end;justify-content:center;}
 .ref-drawer.open{display:flex;}
 .ref-bd{position:absolute;inset:0;background:rgba(0,0,0,.58);}
@@ -146,21 +261,28 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
 .ref-row:hover .ref-rtext{color:var(--txt);}
 .ref-hint{font-size:10px;color:var(--acc);margin-top:4px;opacity:0;}.ref-row:hover .ref-hint{opacity:1;}
 .ref-empty{padding:24px;text-align:center;color:var(--txt3);font-size:13px;}
-/* TOAST */
 .toast{position:fixed;bottom:26px;right:26px;background:var(--acc2);color:#0f1117;padding:10px 18px;border-radius:9px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;}
 .toast.show{opacity:1;}
-/* MINI MODAL (rename/reorder) */
 .mini-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:600;align-items:center;justify-content:center;}
 .mini-ov.open{display:flex;}
-.mini-modal{background:var(--sur);border:1px solid var(--bdr);border-radius:12px;width:360px;padding:20px;animation:mIn .18s ease;}
+.mini-modal{background:var(--sur);border:1px solid var(--bdr);border-radius:12px;width:380px;padding:20px;animation:mIn .18s ease;}
 .mini-title{font-size:15px;font-weight:700;margin-bottom:14px;}
+
+/* ── PRINT ── */
+@media print {
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  body,html{background:#fff!important;}
+  .hdr,.tabs-bar,.main,.modal,.ref-drawer,.toast,.mini-ov{display:none!important;}
+  #printArea{display:block!important;position:fixed;inset:0;overflow:auto;}
+  .sol-doc{padding:16mm 18mm;}
+}
+#printArea{display:none;}
 ::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px;}::-webkit-scrollbar-thumb:hover{background:var(--txt3);}
 .hl{background:rgba(91,141,238,.22);border-radius:2px;padding:0 1px;}
 </style>
 </head>
 <body>
-
 <div class="toast" id="toast"></div>
 <div class="hdr">
   <div class="hdr-brand">
@@ -187,15 +309,10 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
     <button class="btn btn-ghost" id="colConfigBtn" style="margin-left:auto">⚙ 自定义列</button>
   </div>
   <div class="col-config" id="colConfig">
-    <div class="col-config-title">选择显示的列（拖拽可调整顺序，右边拖动列宽）</div>
+    <div class="col-config-title">选择显示的列（点击开关，拖动列右边缘调整宽度）</div>
     <div class="col-config-grid" id="colChips"></div>
   </div>
-  <div class="tbl-wrap">
-    <table id="mainTable">
-      <thead><tr id="theadRow"></tr></thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>
+  <div class="tbl-wrap"><table id="mainTable"><thead><tr id="theadRow"></tr></thead><tbody id="tbody"></tbody></table></div>
 </div>
 <div class="tab-panel" id="t2">
   <div class="toolbar">
@@ -204,9 +321,7 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
   </div>
   <div class="sel-layout">
     <div class="sel-sidebar">
-      <div class="sel-sbar-hdr">能力维度
-        <button class="btn btn-ghost" id="addCatBtn" style="padding:2px 8px;font-size:11px">＋ 新增</button>
-      </div>
+      <div class="sel-sbar-hdr">能力维度<button class="btn btn-ghost" id="addCatBtn" style="padding:2px 8px;font-size:11px">＋ 新增</button></div>
       <div id="catList"></div>
     </div>
     <div class="sel-content" id="selContent"></div>
@@ -222,24 +337,127 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
     <button class="mcls" id="closeEditBtn">✕</button>
   </div>
   <div class="mbody">
-    <div class="fg">
-      <div class="fgrp"><label class="flbl">日期</label><input class="fi" id="f_date" type="date"></div>
-      <div class="fgrp"><label class="flbl">产品类型</label><input class="fi" id="f_type"></div>
-      <div class="fgrp"><label class="flbl">型号</label><input class="fi" id="f_model"></div>
-      <div class="fgrp"><label class="flbl">料号</label><input class="fi" id="f_pn"></div>
-      <div class="fgrp full"><label class="flbl">料号描述</label><textarea class="fta" id="f_desc"></textarea></div>
-      <div class="fgrp full"><label class="flbl">⚡ 计算与系统性能 <span class="ref-btn" data-catidx="0">引用卖点库 ↗</span></label><textarea class="fta tall" id="f_perf"></textarea></div>
-      <div class="fgrp full"><label class="flbl">🏭 工业稳定运行 <span class="ref-btn" data-catidx="1">引用卖点库 ↗</span></label><textarea class="fta tall" id="f_stab"></textarea></div>
-      <div class="fgrp full"><label class="flbl">🛡 工业环境适应 <span class="ref-btn" data-catidx="2">引用卖点库 ↗</span></label><textarea class="fta tall" id="f_env"></textarea></div>
-      <div class="fgrp full"><label class="flbl">🔗 连接与扩展 <span class="ref-btn" data-catidx="3">引用卖点库 ↗</span></label><textarea class="fta tall" id="f_conn"></textarea></div>
-      <div class="fgrp full" id="dynFieldsSection"><div class="dyn-fields"><div class="dyn-field-label">自定义分类字段</div><div id="dynFields"></div></div></div>
-      <div class="fgrp full"><label class="flbl">🧩 模块构成</label><textarea class="fta" id="f_module"></textarea></div>
-      <div class="fgrp full"><label class="flbl">✨ 产品特点</label><input class="fi" id="f_feat"></div>
-      <div class="fgrp full"><label class="flbl">💡 产品介绍</label><textarea class="fta tall" id="f_intro"></textarea></div>
-      <div class="fgrp full"><label class="flbl">❗ 行业痛点</label><textarea class="fta" id="f_pain"></textarea></div>
-      <div class="fgrp full"><label class="flbl">🏆 销售亮点</label><textarea class="fta tall" id="f_high"></textarea></div>
-      <div class="fgrp"><label class="flbl">🌍 应用场景</label><input class="fi" id="f_scene"></div>
-      <div class="fgrp"><label class="flbl">编号</label><input class="fi" id="f_num"></div>
+    <div class="modal-tabs">
+      <div class="modal-tab active" data-panel="panelInfo">📋 产品信息</div>
+      <div class="modal-tab" data-panel="panelSol">📄 Solution 文档</div>
+    </div>
+    <div class="modal-panel active" id="panelInfo">
+      <div class="fg">
+        <div class="fgrp"><label class="flbl">日期</label><input class="fi" id="f_date" type="date"></div>
+        <div class="fgrp"><label class="flbl">产品类型</label><input class="fi" id="f_type"></div>
+        <div class="fgrp"><label class="flbl">型号</label><input class="fi" id="f_model"></div>
+        <div class="fgrp"><label class="flbl">料号</label><input class="fi" id="f_pn"></div>
+        <div class="fgrp full"><label class="flbl">料号描述</label><textarea class="fta" id="f_desc"></textarea></div>
+        <div class="fgrp full"><label class="flbl">⚡ 计算与系统性能 <span class="ref-btn" data-catidx="0">引用卖点库 ↗</span></label><textarea class="fta tall" id="f_perf"></textarea></div>
+        <div class="fgrp full"><label class="flbl">🏭 工业稳定运行 <span class="ref-btn" data-catidx="1">引用卖点库 ↗</span></label><textarea class="fta tall" id="f_stab"></textarea></div>
+        <div class="fgrp full"><label class="flbl">🛡 工业环境适应 <span class="ref-btn" data-catidx="2">引用卖点库 ↗</span></label><textarea class="fta tall" id="f_env"></textarea></div>
+        <div class="fgrp full"><label class="flbl">🔗 连接与扩展 <span class="ref-btn" data-catidx="3">引用卖点库 ↗</span></label><textarea class="fta tall" id="f_conn"></textarea></div>
+        <div class="fgrp full" id="dynFieldsSection" style="display:none"><div class="dyn-fields"><div class="dyn-field-label">自定义分类字段</div><div id="dynFields"></div></div></div>
+        <div class="fgrp full"><label class="flbl">🧩 模块构成</label><textarea class="fta" id="f_module"></textarea></div>
+        <div class="fgrp full"><label class="flbl">✨ 产品特点</label><input class="fi" id="f_feat"></div>
+        <div class="fgrp full"><label class="flbl">💡 产品介绍</label><textarea class="fta tall" id="f_intro"></textarea></div>
+        <div class="fgrp full"><label class="flbl">❗ 行业痛点</label><textarea class="fta" id="f_pain"></textarea></div>
+        <div class="fgrp full"><label class="flbl">🏆 销售亮点</label><textarea class="fta tall" id="f_high"></textarea></div>
+        <div class="fgrp"><label class="flbl">🌍 应用场景</label><input class="fi" id="f_scene"></div>
+        <div class="fgrp"><label class="flbl">编号</label><input class="fi" id="f_num"></div>
+      </div>
+    </div>
+    <!-- SOLUTION PANEL -->
+    <div class="modal-panel" id="panelSol">
+      <div class="sol-editor-wrap">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div class="sol-lang-tabs">
+            <button class="sol-lang-tab active" data-lang="zh" id="solLangZh">🇨🇳 中文</button>
+            <button class="sol-lang-tab" data-lang="en" id="solLangEn">🌍 English</button>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost" id="previewSolBtn" style="font-size:12px">👁 预览效果</button>
+            <button class="btn btn-ok" id="exportSolBtn" style="font-size:12px">⬇ 导出 PDF</button>
+          </div>
+        </div>
+        <div class="sol-hint">填写后预览效果与你的 Solution 文档风格完全一致（深蓝标题 · 卡片数字 · 表格样式）。导出 PDF 可直接发给客户。</div>
+
+        <!-- ZH fields -->
+        <div id="solFieldsZh" class="sol-fields">
+          <div class="sol-field-row">
+            <div class="fgrp"><label class="flbl">产品型号</label><input class="fi" id="zh_product" placeholder="UTC-S1092B"></div>
+            <div class="fgrp"><label class="flbl">方案标题</label><input class="fi" id="zh_solution" placeholder="地磅站解决方案"></div>
+          </div>
+          <div class="fgrp"><label class="flbl">副标题 / Tagline</label><input class="fi" id="zh_tagline" placeholder="全天候工业触控终端 · 产品方案简介"></div>
+          <div class="fgrp"><label class="flbl">产品定位（一段话）</label><textarea class="fta" id="zh_positioning" placeholder="CESIPC UTC-S1092B 是专为…"></textarea></div>
+
+          <div class="sol-section">
+            <div class="sol-section-title">行业痛点（表格行）</div>
+            <div id="zh_pain_rows"></div>
+            <button class="sol-add-btn" id="zh_add_pain">＋ 添加痛点</button>
+          </div>
+
+          <div class="sol-section">
+            <div class="sol-section-title">核心卖点（数字卡片）</div>
+            <div id="zh_feature_items"></div>
+            <button class="sol-add-btn" id="zh_add_feature">＋ 添加卖点</button>
+          </div>
+
+          <div class="sol-section">
+            <div class="sol-section-title">接口规格（表格）</div>
+            <div id="zh_spec_rows"></div>
+            <button class="sol-add-btn" id="zh_add_spec">＋ 添加规格行</button>
+          </div>
+
+          <div class="sol-section">
+            <div class="sol-section-title">典型应用场景</div>
+            <div id="zh_usecase_rows"></div>
+            <button class="sol-add-btn" id="zh_add_usecase">＋ 添加场景</button>
+          </div>
+
+          <div class="sol-section">
+            <div class="sol-section-title">方案总结（对比表）</div>
+            <div class="fgrp" style="margin-bottom:10px"><label class="flbl">总结引言</label><textarea class="fta" id="zh_summary_intro" placeholder="UTC-S1092B 提供的不只是硬件…" style="min-height:60px"></textarea></div>
+            <div id="zh_summary_rows"></div>
+            <button class="sol-add-btn" id="zh_add_summary">＋ 添加对比行</button>
+          </div>
+
+          <div class="fgrp"><label class="flbl">联系说明</label><textarea class="fta" id="zh_contact" placeholder="如需详细技术规格、定制配置方案或项目报价…" style="min-height:60px"></textarea></div>
+        </div>
+
+        <!-- EN fields (same structure, hidden by default) -->
+        <div id="solFieldsEn" class="sol-fields" style="display:none">
+          <div class="sol-field-row">
+            <div class="fgrp"><label class="flbl">Product</label><input class="fi" id="en_product" placeholder="UTC-S1092B"></div>
+            <div class="fgrp"><label class="flbl">Solution Title</label><input class="fi" id="en_solution" placeholder="Weighbridge Solution"></div>
+          </div>
+          <div class="fgrp"><label class="flbl">Tagline</label><input class="fi" id="en_tagline" placeholder="All-Weather Industrial Touch Terminal · Solution Brief"></div>
+          <div class="fgrp"><label class="flbl">Product Overview</label><textarea class="fta" id="en_positioning" placeholder="The CESIPC UTC-S1092B is an all-weather…"></textarea></div>
+
+          <div class="sol-section">
+            <div class="sol-section-title">Pain Points</div>
+            <div id="en_pain_rows"></div>
+            <button class="sol-add-btn" id="en_add_pain">＋ Add Pain Point</button>
+          </div>
+          <div class="sol-section">
+            <div class="sol-section-title">Key Features (Cards)</div>
+            <div id="en_feature_items"></div>
+            <button class="sol-add-btn" id="en_add_feature">＋ Add Feature</button>
+          </div>
+          <div class="sol-section">
+            <div class="sol-section-title">Interface Specifications</div>
+            <div id="en_spec_rows"></div>
+            <button class="sol-add-btn" id="en_add_spec">＋ Add Spec Row</button>
+          </div>
+          <div class="sol-section">
+            <div class="sol-section-title">Typical Applications</div>
+            <div id="en_usecase_rows"></div>
+            <button class="sol-add-btn" id="en_add_usecase">＋ Add Use Case</button>
+          </div>
+          <div class="sol-section">
+            <div class="sol-section-title">Solution Summary</div>
+            <div class="fgrp" style="margin-bottom:10px"><label class="flbl">Intro sentence</label><textarea class="fta" id="en_summary_intro" placeholder="The UTC-S1092B delivers more than hardware…" style="min-height:60px"></textarea></div>
+            <div id="en_summary_rows"></div>
+            <button class="sol-add-btn" id="en_add_summary">＋ Add Row</button>
+          </div>
+          <div class="fgrp"><label class="flbl">Contact Note</label><textarea class="fta" id="en_contact" placeholder="For detailed specs, custom configuration or pricing…" style="min-height:60px"></textarea></div>
+        </div>
+      </div>
     </div>
     <div class="mfooter">
       <button class="btn btn-danger" id="delBtn">删除产品</button>
@@ -247,6 +465,21 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
       <button class="btn btn-prim" id="saveBtn">💾 保存</button>
     </div>
   </div>
+</div>
+</div>
+
+<!-- SOLUTION PREVIEW MODAL -->
+<div class="ov" id="solViewOv">
+<div class="sol-view-modal">
+  <div class="sol-view-hdr">
+    <div><div class="sol-view-hdr-title" id="solViewTitle">Solution 预览</div><div class="sol-view-hdr-sub" id="solViewMeta"></div></div>
+    <div class="sol-view-actions">
+      <button class="btn btn-ghost" id="solLangToggleBtn" style="font-size:12px;display:none">切换语言</button>
+      <button class="btn btn-ok" id="solViewExportBtn">⬇ 导出 PDF</button>
+      <button class="mcls" id="closeSolViewBtn">✕</button>
+    </div>
+  </div>
+  <div class="sol-view-body" id="solViewBody"></div>
 </div>
 </div>
 
@@ -262,10 +495,10 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
   </div>
 </div>
 
-<!-- MINI MODAL: rename / reorder -->
+<!-- MINI MODAL -->
 <div class="mini-ov" id="miniOv">
   <div class="mini-modal">
-    <div class="mini-title" id="miniTitle">重命名分类</div>
+    <div class="mini-title" id="miniTitle"></div>
     <div id="miniBody"></div>
     <div style="display:flex;gap:8px;margin-top:14px;">
       <button class="btn btn-ghost" id="miniCancel" style="flex:1">取消</button>
@@ -274,729 +507,611 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
   </div>
 </div>
 
+<!-- PRINT AREA -->
+<div id="printArea"></div>
+
 <script>
 const INITIAL = {"sheet1": [{"编号": "1", "时间": "2026-03-06", "产品类型": "EPC BOX PC", "型号": "EPC-309A", "料号": "C10.03.03.005", "料号描述": "CES-1902;I7-10510U;16G;SSD:512G;无线WIFI,无线蓝牙;宽压输入-USB3.0x4;USB2.0x2;RJ45x2;AUDIOx1;RS232x4;RS485x2;HDMIx1;VGAx1 其他功能:来电自启", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 支持宽压 9-36V DC 电源输入，适应复杂工业供电环境\n3. 3Pin 凤凰端子设计：配备 3Pin 凤凰端子，支持标准工业接线，安装和维护简便。", "工业环境适应": "1. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n2. 散热设计：无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。\n3. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性", "连接与扩展": "1. 双 Intel® I210 千兆以太网接口：配备 双 Intel® I210 千兆以太网接口，提供工业级网络高速稳定传输，支持冗余与链路聚合，适合自动化控制、工业通信和数据采集场景。\n2. WiFi 和蓝牙：支持 WiFi 和蓝牙 无线通信，实现本地无线连接，方便工业现场设备互联和数据传输。\n3. 丰富 I/O 接口：配备 4x USB 3.0、2x USB 2.0、4x RS232、2x RS485、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。\n4. 1x M.2 Key 2280 NVMe SSD 插槽，1x Mini PCle Wi-Fi 模组扩展", "模块构成": "CES-1902：HDMI+4*USB3.0+2*LAN+Audio+RAM+mSATA SSD+BT\nEXB-D2211：VGA+COM1（RS232）+M.2 SSD\nCOB-D2171：3Pin 凤凰端子+宽压模块\nCOB-D2212：COM2-6（COM2和3 可以改RS485）+2*USB2.0+按键开关", "产品特点": "", "产品介绍": "", "行业痛点": "", "销售亮点": "", "应用场景": ""}, {"编号": "2", "时间": "2026-03-06", "产品类型": "EPC PANEL PC", "型号": "EPC-S1022A", "料号": "C11.01.04.023", "料号描述": "9.7 inch;1024*768;默认;电容触摸;CES-1201;I5-1235U;16G;SSD:512G;WIFI;宽压输入-USB3.0x4,USB2.0x2;;RJ45x2;AUDIOx1;RS232x2;RS485x1;HDMIx1,VGAx1;其他功能:-", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 支持宽压 9-36V DC 电源输入，适应复杂工业供电环境\n3. 3Pin 凤凰端子设计：配备 3Pin 凤凰端子，支持标准工业接线，安装和维护简便。", "工业环境适应": "1. 电容屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 纯平面 10 点电容式触摸屏，多点触控，操作流畅，适合精细操作。\n2. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n3. 散热设计：无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。\n4. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性\n5. 10 英寸 4:3 TFT LCD，分辨率 1024x768 (XGA)", "连接与扩展": "1. 双 Intel® I210 千兆以太网接口：配备 双 Intel® I210 千兆以太网接口，提供工业级网络高速稳定传输，支持冗余与链路聚合，适合自动化控制、工业通信和数据采集场景。\n2. 丰富 I/O 接口：配备 4x USB 3.0、2x USB 2.0、2x RS232、1x RS485、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。\n3. 2x M.2 Key 2280 NVMe SSD 插槽，1x Mini PCle Wi-Fi 模组扩展", "模块构成": "", "产品特点": "", "产品介绍": "", "行业痛点": "", "销售亮点": "", "应用场景": ""}, {"编号": "4", "时间": "2026-03-07", "产品类型": "EPC PANEL PC", "型号": "EPC-W1322T", "料号": "C11.01.04.018", "料号描述": "13.3inch;1920*1080;默认;电容触摸;CES-1201;i7-1255U;16G;SSD:256G;无线Wi-Fi,无;宽压输入-USB3.0x4;RJ45x2;AUDIOx1,MICx1;RS232x3;HDMIx1,VGAx1;其他功能:TP电容触摸开关;前框黑色(原型号：EPC-W1322B)", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 支持宽压 9-36V DC 电源输入，适应复杂工业供电环境\n3. 3Pin 凤凰端子设计：配备 3Pin 凤凰端子，支持标准工业接线，安装和维护简便。\n4. 电源开关与状态指示：电源开关与状态指示可延伸至机柜前面板，便于集中管理与维护。", "工业环境适应": "1. 电容屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 纯平面 10 点电容式触摸屏，多点触控，操作流畅，适合精细操作。\n2. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n3. 散热设计：无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。 \n4. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性\n5. 13.3 英寸 16:9 TFT LCD，分辨率 1920x1080 (FHD)", "连接与扩展": "1. 双 Intel® I210 千兆以太网接口：配备 双 Intel® I210 千兆以太网接口，提供工业级网络高速稳定传输，支持冗余与链路聚合，适合自动化控制、工业通信和数据采集场景。\n2. WiFi 和蓝牙：支持 WiFi 和蓝牙 无线通信，实现本地无线连接，方便工业现场设备互联和数据传输。\n3. 丰富 I/O 接口：配备 4x USB 3.0、2x USB 2.0、6x RS232（可选 RS485/RS422）、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。\n4. 2x M.2 Key 2280 NVMe SSD 插槽，1x Mini PCle Wi-Fi 模组扩展。", "模块构成": "CES-1201：HDMI+4*USB3.0+2*LAN+Audio+RAM+M.2 SSD+BT\nEXB-D2351：VGA+3Pin 凤凰端子+M.2 SSD\nCOB-D21C6：COM 1-3（COM2+3 可以改RS485）+2*USB2.0+按键开关", "产品特点": "", "产品介绍": "", "行业痛点": "", "销售亮点": "", "应用场景": ""}, {"编号": "5", "时间": "2026-03-07", "产品类型": "AI", "型号": "EPC-W12-N500", "料号": "C11.01.06.001", "料号描述": "12.5 inch;1920*1080;默认;电容触摸;Orin NX 16G;SSD:256G;WIFI,宽压输入-USB2.0x2,USB3.0x2;RJ45x4(POE);AUDIOx1;RS485x2;其他功能:4G全网通,", "计算与系统性能": "1. NVIDIA Jetson Orin™ NX 16GB：搭载 NVIDIA Jetson Orin™ NX 16GB AI 模组，提供 最高 70 TOPS 边缘 AI 推理算力，集成 8 核 ARM CPU 与 1024 核 Ampere GPU，适合工业边缘 AI、机器视觉及智能控制应用，兼顾高性能与低功耗。\n2. 我们的机器硬盘采用金士顿，是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 支持宽压 9-36V DC 电源输入，适应复杂工业供电环境\n3. 3Pin 凤凰端子设计：配备 3Pin 凤凰端子，支持标准工业接线，安装和维护简便。", "工业环境适应": "1. 电容屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 纯平面 10 点电容式触摸屏，多点触控，操作流畅，适合精细操作。\n2. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n3. CESIPC 智能温控技术，通过硬件架构优化与算法调控，实现高效散热、性能释放与系统长期稳定运行，适合工业现场长期使用。\n4. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性\n5. 12.5 英寸 16:9 TFT LCD，分辨率 1920x1080 (FHD)", "连接与扩展": "1. 四口 Intel® I210 千兆以太网接口（支持 PoE）：配备 四个 Intel® I210 千兆以太网接口，支持 PoE 功能，提供工业级高速稳定网络传输，支持冗余与链路聚合，适合工业自动化控制、工业通信和数据采集场景。\n2. WiFi 和蓝牙：支持 WiFi 和蓝牙 无线通信，实现本地无线连接，方便工业现场设备互联和数据传输。\n3. 4G/5G 与本地存储扩展：内置 TF 卡与 SIM 卡插槽，可扩展 4G/5G 网络，实现高速稳定的无线通信与本地数据存储，无需外接模块即可快速部署，简化安装与维护，适合工业现场远程监控、数据采集及设备互联。\n4.  I/O 接口：配备 4x USB 3.0、1x HDMI、RS-485 × 2、CAN Bus × 1、CAN GPIO，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。\n5. 1x M.2 Key 2280 NVMe SSD 插槽，1x Mini PCle Wi-Fi 模组扩展", "模块构成": "", "产品特点": "", "产品介绍": "", "行业痛点": "", "销售亮点": "", "应用场景": ""}, {"编号": "6", "时间": "2026-03-16", "产品类型": "UTC", "型号": "UTC-W2192E", "料号": "C9.03.03.085", "料号描述": "21.5 inch;1920*1080;默认;电容触摸;CES-1902;i5-10210U;32G;SSD:512G;无,无;宽压输入-USB2.0x2,USB3.0x4;RJ45x2;AUDIOx1;RS232x4;RS485x2;HDMIx1,VGAx1;其他功能:支持冗余电源", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 宽压冗余电源 —— 系统配备双电源模块，即使其中一个模块出现故障，工业 PC 仍可正常运行，不会宕机，确保关键应用持续稳定，提高生产可靠性。 \n3. 支持宽压 9-36V DC 电源输入，适应复杂工业供电环境", "工业环境适应": "1. 电容屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 纯平面 10 点电容式触摸屏，多点触控，操作流畅，适合精细操作。\n2. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n3. 散热设计：无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。 \n4. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性\n5. 21.5 英寸 16:9 TFT LCD，分辨率 1920x1080 (FHD)", "连接与扩展": "1. 双 Intel® I210 千兆以太网接口：配备 双 Intel® I210 千兆以太网接口，提供工业级网络高速稳定传输，支持冗余与链路聚合，适合自动化控制、工业通信和数据采集场景。\n2. 丰富 I/O 接口：配备 4x USB 3.0、2x USB 2.0、4x RS232、2x RS485、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。\n3. 1x M.2 Key 2280 NVMe SSD 插槽，1x Mini PCle Wi-Fi 模组扩展", "模块构成": "", "产品特点": "", "产品介绍": "", "行业痛点": "", "销售亮点": "", "应用场景": ""}, {"编号": "7", "时间": "2026-03-16", "产品类型": "UTC", "型号": "UTC-S1262A", "料号": "C9.02.01.034", "料号描述": "12.1 inch;1024*768;默认;电容触摸;CES-1602-V1.1-J1900;J1900;4G;SSD:128G;WIFI;常规电压-,USB2.0x5,USB3.0x1;RJ45x2;AUDIOx1;RS232x1;RS485x2;HDMIx1,VGAx1;其他功能:-自启", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 3Pin 凤凰端子设计：配备 3Pin 凤凰端子，支持标准工业接线，安装和维护简便。", "工业环境适应": "1. 电容屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 纯平面 10 点电容式触摸屏，多点触控，操作流畅，适合精细操作。\n2. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n3. 散热设计：无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。 \n4. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性\n5. 12 英寸 4:3 TFT LCD，分辨率 1024x768 (XGA)", "连接与扩展": "1. 双 Intel® I210 千兆以太网接口：配备 双 Intel® I210 千兆以太网接口，提供工业级网络高速稳定传输，支持冗余与链路聚合，适合自动化控制、工业通信和数据采集场景。\n2. WiFi 和蓝牙：支持 WiFi 和蓝牙 无线通信，实现本地无线连接，方便工业现场设备互联和数据传输。\n3. 丰富 I/O 接口：配备 4x USB 3.0、2x USB 2.0、2x RS232、1x RS485、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。\n4. 1x Mini PCle Wi-Fi 模组扩展", "模块构成": "", "产品特点": "", "产品介绍": "", "行业痛点": "", "销售亮点": "", "应用场景": ""}, {"编号": "8", "时间": "2026-03-11", "产品类型": "WPC", "型号": "CTN-W2122B(A)", "料号": "C5.02.07.118", "料号描述": "21.5 inch;1920*1080;默认;电容触摸;CES-1201;I5-1235U;16G;SSD:1T;无,无;USB3.0x3;RJ45x1;HDMIx1;其他功能:-外部接口全为防水航插 其他功能：来电自启", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。", "工业环境适应": "1. 前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 纯平面 10 点电容式触摸屏，多点触控，操作流畅，适合精细操作。\n2. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n3. 无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。 \n4. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性\n5. 21.5 英寸 16:9 TFT LCD，分辨率 1920x1080 (FHD)", "连接与扩展": "防水接口、 单边出接口等", "模块构成": "", "产品特点": "适用于质检区、办公区及轻湿环境的工业级办公电脑升级方案", "产品介绍": "产品主要适用于质检区、办公区和轻湿环境，类似于食品厂的办公区，仓库区，靠近产线的位置，完成比如ERP的工作", "行业痛点": "目前很多这类区域用的都是办公电脑，环境湿度比较高，长时间下来办公电脑接口会生锈，从墨西哥客户那里了解到，他的终端客户一直买的是戴尔和联想一线商用品牌，但是一般使用寿命在9个月左右，接口就会有生锈的问题", "销售亮点": "工业级办公电脑升级方案\n1.搭载 Intel® Core™ i5-1235U 处理器，可以满足处理文件文档需求，很多商业电脑都会用这些处理器、 i 系列处理器既是传统商用电脑的常用配置，也适合小型微型电脑使用。”\n2.16GB DDR5：搭载 海力士 16GB DDR5 内存模块，SO‑DIMM 接口，频率 4800/5200 MHz，高稳定性，适合工业级应用。\n3. 1TB M.2 SSD：搭载 金士顿 1TB M.2 NVMe SSD，接口 M.2 Key 2280，顺序读写可达 2000+ MB/s，高性能工业级存储。\n4. 屏幕大小也客户工业电脑需求，办公都是21-27寸\n5. 无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。 \n对于质检区、办公区及轻湿环境\n6.客户目前是机箱+显示器 分体容易生锈，我们的是一体化设计，有效避免了分体连接处的腐蚀风险，同时结构更紧凑、稳定性更高，维护更方便。\n7. 接口布局优化：机器采用 单边接口设计，布局合理，更符合客户操作场景，提高使用便捷性。\n8. 主板内部做三防处理，前面板支持IP65+前框轻微防护处理\n9. 基于 CESIPC LEGO MODE 模块化架构设计，USB 网口，使用防水航插，完全考虑到客户预算，最合适的方案解决了最痛苦的问题\n10.内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能\n11.支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行\n12.工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n13. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。", "应用场景": "墨西哥食品工厂办公室"}, {"编号": "9", "时间": "2026-03-18", "产品类型": "EPC BOX PC", "型号": "EPC-102B", "料号": "C10.01.04.006", "料号描述": "CES-1201;I5-1235U;16G;SSD:256G;无;无;宽压输入-USB3.0x4;RJ45x4;AUDIOx1;HDMIx1,其他功能:来电自启", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 支持宽压 9-36V DC 电源输入，适应复杂工业供电环境\n3. 3Pin 凤凰端子设计：配备 3Pin 凤凰端子，支持标准工业接线，安装和维护简便。", "工业环境适应": "1. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n2. CESIPC 智能温控技术，通过硬件架构优化与算法调控，实现高效散热、性能释放与系统长期稳定运行，适合工业现场长期使用。\n3. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性", "连接与扩展": "1. 四个 Intel® I210 千兆以太网接口：配备 双 Intel® I210 千兆以太网接口，提供工业级网络高速稳定传输，支持冗余与链路聚合，适合自动化控制、工业通信和数据采集场景。\n2. I/O 接口：配备 4x USB 3.0、1x HDMI，高速数据传输，满足工业控制、数据采集及设备互联需求。\n3. 2x M.2 Key 2280 NVMe SSD 插槽，1x Mini PCle Wi-Fi 模组扩展", "模块构成": "", "产品特点": "", "产品介绍": "", "行业痛点": "", "销售亮点": "", "应用场景": ""}, {"编号": "10", "时间": "2026-03-16", "产品类型": "UTC", "型号": "UTC-W1522A", "料号": "C9.03.05.007", "料号描述": "15.6 inch;1920*1080;默认;电容触摸;CES-1201;I5-1235U;8G;SSD:256G;WIFI,蓝牙;宽压输入-USB2.0x2,USB3.0x4;RJ45x2;AUDIOx1,MICx1;RS232x4;RS485x2;HDMIx1,VGAx1;其他功能:来电自启", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 支持宽压 9-36V DC 电源输入，适应复杂工业供电环境\n3. 3Pin 凤凰端子设计：配备 3Pin 凤凰端子，支持标准工业接线，安装和维护简便。", "工业环境适应": "1. 电容屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 纯平面 10 点电容式触摸屏，多点触控，操作流畅，适合精细操作。\n2. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n3. 散热设计：无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。 \n4. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性\n5. 15.6 英寸 16:9 TFT LCD，分辨率 1920x1080 (FHD)", "连接与扩展": "1. 双 Intel® I210 千兆以太网接口：配备 双 Intel® I210 千兆以太网接口，提供工业级网络高速稳定传输，支持冗余与链路聚合，适合自动化控制、工业通信和数据采集场景。\n2. WiFi 和蓝牙：支持 WiFi 和蓝牙 无线通信，实现本地无线连接，方便工业现场设备互联和数据传输。\n3. 丰富 I/O 接口：配备 4x USB 3.0、2x USB 2.0、4x RS232、2x RS485、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。\n4. 2x M.2 Key 2280 NVMe SSD 插槽，1x Mini PCle Wi-Fi 模组扩展。", "模块构成": "", "产品特点": "", "产品介绍": "", "行业痛点": "", "销售亮点": "", "应用场景": ""}, {"编号": "11", "时间": "2026-03-16", "产品类型": "UTC", "型号": "UTC-S1282E", "料号": "C9.02.02.023", "料号描述": "12.1 inch;1024*768;默认;电容触摸;3802;I5-7360U;8G;SSD:128G;无线WIFI,无线蓝牙;宽压输入-USB3.0x4;RJ45x2;AUDIOx1,MICx1;RS232x4;HDMIx1;其他功能:-2pin航插 其他功能:  自启", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 宽压冗余电源 —— 系统配备双电源模块，即使其中一个模块出现故障，工业 PC 仍可正常运行，不会宕机，确保关键应用持续稳定，提高生产可靠性。\n3. M12 螺纹锁紧 2Pin 航插设计：采用 M12 螺纹锁紧 2Pin 航插接口，提供稳固可靠的电源连接，适用于复杂工业现场环境。", "工业环境适应": "1. 电容屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 纯平面 10 点电容式触摸屏，多点触控，操作流畅，适合精细操作。\n2. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n3. 散热设计：无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。 \n4. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性\n5. 12 英寸 4:3 TFT LCD，分辨率 1024x768 (XGA)", "连接与扩展": "1. 双 Realtek RTL8111HN 以太网接口：配备 双 Realtek RTL8111HN 千兆以太网接口，保证工业网络高速稳定传输，支持基本工业通信和局域网连接，适合中低负载工业应用。\n2. WiFi 和蓝牙：支持 WiFi 和蓝牙 无线通信，实现本地无线连接，方便工业现场设备互联和数据传输。\n3. 丰富 I/O 接口：配备 4x USB 3.0、2x USB 2.0、4x RS232、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。\n4. 1x Mini PCle Wi-Fi 模组扩展", "模块构成": "", "产品特点": "", "产品介绍": "", "行业痛点": "", "销售亮点": "", "应用场景": ""}, {"编号": "12", "时间": "2026-03-18", "产品类型": "UTC", "型号": "UTC-S1561A", "料号": "C9.03.01.020", "料号描述": "15 inch;1024*768;默认;电阻触摸;CES-1602;J1900;8G;SSD:256G;WIFI,BT;宽压输入-USB2.0x5,USB3.0x1;RJ45x2;AUDIOx1,MICx1;RS232x6;HDMIx1,VGAx1", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 支持宽压 9-36V DC 电源输入，适应复杂工业供电环境\n3. 3Pin 凤凰端子设计：配备 3Pin 凤凰端子，支持标准工业接线，安装和维护简便。\n4. 操作系统兼容性：完美支持Windows 7，兼容传统工业软件与控制系统，满足客户对长期稳定运行环境的需求", "工业环境适应": "1. 电阻屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 电阻式触摸屏，抗干扰能力强，支持单点触控，适合工业现场手套操作或高噪声环境。\n2. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n3. 散热设计：无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。 \n4. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性\n5. 15 英寸 4:3 TFT LCD，分辨率 1024x768 (XGA)", "连接与扩展": "1. 双 Realtek RTL8111HN 以太网接口：配备 双 Realtek RTL8111HN 千兆以太网接口，保证工业网络高速稳定传输，支持基本工业通信和局域网连接，适合中低负载工业应用。\n2. WiFi 和蓝牙：支持 WiFi 和蓝牙 无线通信，实现本地无线连接，方便工业现场设备互联和数据传输。\n3. 丰富 I/O 接口：配备 4x USB 3.0、2x USB 2.0、6x RS232（可选 RS485/RS422）、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。\n4. 1x Mini PCle Wi-Fi 模组扩展", "模块构成": "", "产品特点": "UTC 系列是 CESIPC 针对纺织厂生产线及工业设备控制场景推出的专用工业电脑\n\n具备防尘、防振动、长时间高负载稳定运行和模块化易维护等特点\n\n解决常规电脑在车间环境下易故障、连续运行不稳及维护成本高的痛点。", "产品介绍": "全球棉花生产高度集中，前六大主产国产量合计占全球总产量的 80% 以上。\n\n1. 亚洲产区（全球核心）\n*   中国：\n    *   地位：全球最大的棉花生产国（占比约 24%-29%）。\n    *   核心聚集地：新疆。新疆棉花产量占全国的 92.9%，全球约 20% 的棉花产自这里。这里是高端长绒棉的核心产区\n*   印度：\n    *   地位：全球第二大生产国（占比约 19%-23%）。\n    \n*   巴基斯坦：\n    *   地位：全球第五大生产国。\n\n2. 美洲产区（高效与规模化）\n*   巴西：\n    *   地位：全球第三大生产国，\n*   美国：\n    *   地位：全球第四大生产国\n\n*   澳大利亚：第六大生产国\n*   中亚地区：乌兹别克斯坦\n\n棉花在哪，纺织厂就在哪，资源密集型产业\n\n巴基斯坦纺织厂，包括织布、染色、整理及成品加工车间，用于生产线监控、数据采集、ERP、MES 系统及车间管理\n", "行业痛点": "连续运转压力大：咱们的生产线可是 24/7 全天候开着的，常规电脑扛不住长时间高负载，一用就容易卡、容易宕机。\n电力波动风险：车间电压不稳或者突然停电，常规电脑就容易罢工，数据丢了、系统崩了，维修还麻烦。\n纤维粉多：纺织车间空气里满是纤维粉，常规电脑的散热口一堵，轻则发热慢、卡顿，重则直接出故障。\n温湿度不稳定：染整车间温湿度经常大起大落，常规电脑容易死机、自动重启，整条线都得停下来等。\n数据安全和控制稳定性不足：生产数据、ERP、MES 这些系统都很重要，一旦电脑出问题，数据丢了或者系统崩了，整条生产线都麻烦。\n机器震动大：织机、压布机一直震啊震，常规电脑的硬盘、主板就受不了，时间长了肯定出问题。\n维修麻烦成本高：电脑一坏，停机去维修，找配件、重装系统，人工成本高，生产效率也掉得厉害。\n环境适应性差：常规办公电脑的机身结构不够坚固，一碰灰尘、一遇湿气、一震动就容易老化，特别不耐用。", "销售亮点": "1. Intel® Celeron J1900：主频 2.0 GHz，支持多核心多线程，低功耗设计，适合工业级基础应用。\n2. 我们的机器内存用的是海力士 8GB DDR3，硬盘用的是金士顿 256GB mSATA SSD，根据我们之前的项目经验和验证，性能稳定，使用完全没问题。 \n3. 我们最有优势的一点\n我们这套机器很多时候都是当上位机用的，用来采集车间的各种生产数据。\n纺织厂里机器特别多，包括纺纱机械、化纤机械、织造机械、针织机械、非织造布机械、染整机械，还有成衣机械和各种辅助设备。\n而且车间里还有很多大功率电机、变频器（VFD）、伺服驱动器、喷气织机的电磁阀等等，这些设备不仅会产生电网谐波，还会受到浪涌电流影响，有时候自己也会引起浪涌。\n所以针对这种 多棉絮、高温高湿、强干扰 的环境，我们建议用 “前端滤波 + 末端防浪涌” 的组合策略：\n· 前端滤波器\n也就是我们用的专用电源滤波器，这是一道第一道防线。\n它能把变频器产生的高频噪声和谐波过滤掉，避免干扰回到电网或者影响旁边的设备。\n·末端/输入级防护\n包括浪涌保护器和软启动设计，用来应对雷击、电网切换或者电容投切产生的瞬时高能脉冲。\n我们主板上也考虑了这个问题，做了压敏电阻、气体放电管、电感/电容网络等设计，能吸收这些瞬间脉冲，保护电脑稳定运行。\n4. TPM 2.0 可信平台模块：提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n5. 支持 CESIPC SafeCore™ 系统保护技术：防止非法断电导致系统文件损坏，保障系统稳定运行。\n6. 来电自启（Power-on after AC Recovery）：电力恢复后自动开机，保障无人值守场景下连续运行。\n7. 支持宽压 9-36V DC 电源输入：适应复杂工业供电环境。\n8. 3Pin 凤凰端子设计：支持标准工业接线，安装和维护简便。\n9. 操作系统兼容性：完美支持 Windows 7，兼容传统工业软件与控制系统，满足客户长期稳定运行需求。\n10. 双 Realtek RTL8111HN 以太网接口：保证工业网络高速稳定传输。\n11. WiFi 和蓝牙：支持无线通信，实现现场设备互联和数据传输。\n12. 丰富 I/O 接口：4x USB 3.0、2x USB 2.0、6x RS232（可选 RS485/RS422）、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输。\n13. 1x Mini PCIe Wi-Fi 模组扩展。", "应用场景": "巴基斯坦纺织厂"}, {"编号": "13", "时间": "2026-03-19", "产品类型": "UTC", "型号": "UTC-S1792E", "料号": "C9.03.03.087", "料号描述": "17 inch;1280*1024;默认;电容触摸;CES-1902;i5-10210U;16G;SSD:1T;无,无;宽压输入-USB2.0x2,USB3.0x4;RJ45x2;AUDIOx1;RS232x4;RS485x2;HDMIx1,VGAx1;其他功能:支持冗余电源", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 支持宽压 9-36V DC 电源输入，适应复杂工业供电环境\n3. 宽压冗余电源 —— 系统配备双电源模块，即使其中一个模块出现故障，工业 PC 仍可正常运行，不会宕机，确保关键应用持续稳定，提高生产可靠性。\n4. 3Pin 凤凰端子设计：配备 3Pin 凤凰端子，支持标准工业接线，安装和维护简便。", "工业环境适应": "1. 电容屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 纯平面 10 点电容式触摸屏，多点触控，操作流畅，适合精细操作。\n2. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n3. 散热设计：无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。 \n4. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性", "连接与扩展": "1. 双 Intel® I210 千兆以太网接口：配备 双 Intel® I210 千兆以太网接口，提供工业级网络高速稳定传输，支持冗余与链路聚合，适合自动化控制、工业通信和数据采集场景。\n2. WiFi 和蓝牙：支持 WiFi 和蓝牙 无线通信，实现本地无线连接，方便工业现场设备互联和数据传输。\n3. 丰富 I/O 接口：配备 4x USB 3.0、2x USB 2.0、6x RS232（可选 RS485/RS422）、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。\n4. 1x M.2 Key 2280 NVMe SSD 插槽，1x Mini PCle Wi-Fi 模组扩展", "模块构成": "", "产品特点": "", "产品介绍": "", "行业痛点": "", "销售亮点": "", "应用场景": ""}], "sheet2": {"items": [{"序号": "1", "计算与系统性能": "我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。", "工业稳定运行": "1. 硬件看门狗：内置独立硬件看门狗模块，实时监控系统状态，出现死机或异常时自动复位重启，保证工业设备长期无人值守下稳定运行。", "工业环境适应": "电容屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 纯平面 10 点电容式触摸屏，多点触控，操作流畅，适合精细操作。\n\n电阻屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 电阻式触摸屏，抗干扰能力强，支持单点触控，适合工业现场手套操作或高噪声环境。", "连接与扩展": "1. 双 Intel® I210 千兆以太网接口：配备 双 Intel® I210 千兆以太网接口，提供工业级网络高速稳定传输，支持冗余与链路聚合，适合自动化控制、工业通信和数据采集场景。\n\n2. 双 Realtek RTL8111HN 以太网接口：配备 双 Realtek RTL8111HN 千兆以太网接口，保证工业网络高速稳定传输，支持基本工业通信和局域网连接，适合中低负载工业应用。", "_sid": "sel_0"}, {"序号": "2", "计算与系统性能": "我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n\n2. 网络唤醒（Wake-on-LAN, WOL）：支持通过网络远程开机与管理，即使设备处于关机或待机状态，也可通过网络信号快速唤醒系统，适用于无人值守、远程监控及集中管理场景，提升运维效率与系统可用性。", "工业环境适应": "1. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n\n2. 采用加固型手持设计，整机达到 IP65 防护等级，具备 1 米自由跌落抗冲击能力，确保在严苛环境下依然稳定运行。", "连接与扩展": "1. WiFi 和蓝牙：支持 WiFi 和蓝牙 无线通信，实现本地无线连接，方便工业现场设备互联和数据传输。\n\n2. 4G/5G 与本地存储扩展：内置 TF 卡与 SIM 卡插槽，可扩展 4G/5G 网络，实现高速稳定的无线通信与本地数据存储，无需外接模块即可快速部署，简化安装与维护，适合工业现场远程监控、数据采集及设备互联。", "_sid": "sel_1"}, {"序号": "3", "计算与系统性能": "", "工业稳定运行": "1. 支持宽压 9-36V DC 电源输入，适应复杂工业供电环境\n\n2. 内置 2900mAh 锂电池设计，在外部电源意外断电时，可提供最长约 15 分钟的续航延时关机，保障系统数据完整与运行安全。\n\n3. 智能电池保护模式，当设备连续一周未使用时，系统将自动进入电池保护状态，电流降至微安级低功耗模式，有效延长电池寿命并确保电池安全。\n\n4. 宽压冗余电源 —— 系统配备双电源模块，即使其中一个模块出现故障，工业 PC 仍可正常运行，不会宕机，确保关键应用持续稳定，提高生产可靠性。", "工业环境适应": "1. 散热设计：无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。 \n\n2. CESIPC 智能温控技术，通过硬件架构优化与算法调控，实现高效散热、性能释放与系统长期稳定运行，适合工业现场长期使用。", "连接与扩展": "丰富 I/O 接口：配备 4x USB 3.0、2x USB 2.0、6x RS232（可选 RS485/RS422）、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。", "_sid": "sel_2"}, {"序号": "4", "计算与系统性能": "内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n\n支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 电源开关与状态指示：电源开关与状态指示可延伸至机柜前面板，便于集中管理与维护。\n\n2. M12 螺纹锁紧 2Pin 航插设计：采用 M12 螺纹锁紧 2Pin 航插接口，提供稳固可靠的电源连接，适用于复杂工业现场环境。\n\n3. 3Pin 凤凰端子设计：配备 3Pin 凤凰端子，支持标准工业接线，安装和维护简便。\n\n4. 外拉开关设计：电源线可加长延伸，满足工业现场多样化操作需求，提升安装灵活性与操作便利性。", "工业环境适应": "基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性", "连接与扩展": "1. 1x Mini PCle Wi-Fi 模组扩展\n2. 1x M.2 Key 2280 NVMe SSD 插槽，1x Mini PCle Wi-Fi 模组扩展\n3. 2x M.2 Key 2280 NVMe SSD 插槽，1x Mini PCle Wi-Fi 模组扩展", "_sid": "sel_3"}, {"序号": "其他", "计算与系统性能": "NVIDIA Jetson 系列规格与卖点\n\n1. NVIDIA Jetson Orin™ NX 8GB：搭载 NVIDIA Jetson Orin™ NX 8GB AI 模组，提供 最高 40 TOPS 边缘 AI 推理算力，集成 8 核 ARM CPU 与 1024 核 Ampere GPU，适合工业边缘 AI、机器视觉及智能控制应用。\n\n2. NVIDIA Jetson Orin™ NX 16GB：搭载 NVIDIA Jetson Orin™ NX 16GB AI 模组，提供 最高 70 TOPS 边缘 AI 推理算力，集成 8 核 ARM CPU 与 1024 核 Ampere GPU，适合工业边缘 AI、机器视觉及智能控制应用，兼顾高性能与低功耗。\n\n3. NVIDIA Jetson Orin™ Nano 4GB：搭载 NVIDIA Jetson Orin™ Nano 4GB AI 模组，提供 最高 21 TOPS 边缘 AI 推理算力，集成 4 核 ARM CPU 与 512 核 GPU，适合轻量级工业 AI 推理与嵌入式边缘计算应用。\n\n4. NVIDIA Jetson Orin™ Nano 8GB：搭载 NVIDIA Jetson Orin™ Nano 8GB AI 模组，提供 最高 21 TOPS 边缘 AI 推理算力，集成 4 核 ARM CPU 与 512 核 GPU，适合中小型工业边缘 AI、机器视觉与智能控制任务。\n\n5. NVIDIA Jetson Orin™ AGX / Developer Kit（可选 32GB 模组）：搭载 NVIDIA Jetson Orin™ AGX AI 模组，提供 最高 200 TOPS AI 推理算力，集成多核 ARM CPU 与 Ampere GPU，适合高性能工业边缘计算、复杂视觉处理及机器人控制应用。", "工业稳定运行": "操作系统兼容性：完美支持Windows 7，兼容传统工业软件与控制系统，满足客户对长期稳定运行环境的需求。", "工业环境适应": "", "连接与扩展": "CAN 总线模块：支持 CSM100T CAN 模块，实现稳定的 CAN 总线通信，便于设备互联与工业控制系统扩展。", "_sid": "sel_4"}, {"序号": "1. \n2. \n3. \n4. \n5. \n6.", "计算与系统性能": "", "工业稳定运行": "", "工业环境适应": "", "连接与扩展": "二维条码扫描器：扫描头位于顶部，支持高效扫描各种二维条码，方便仓储、物流及生产线应用\n（3mil 高精度识读，兼容屏幕/纸质/DPM 条码，支持 UART/USB（HID）接口灵活集成）", "_sid": "sel_5"}], "sub_headers": {"计算与系统性能": "1. 处理器 （代数，处理速度等） \n2. 内存 （接口，读写速度等） \n3. 硬盘（接口，读写速度等） \n4. TPM 2.0安全模块", "工业稳定运行": "1. 硬件看门狗 \n2. 来电自启 PXE / WOL\n3. 工业电源设计\n4. 凤凰端子电源", "工业环境适应": "1. IP65前面板\n2. 6061铝合金结构\n3. 无风扇散热\n4. 工业结构设计", "连接与扩展": "1. 双网口\n2. WiFi、4G扩展\n3. USB、RS232、HDMI、VGA\n4. M.2扩展、Mini PCIe扩展"}}};
 
-// ─── DATA ───────────────────────────────────────────────────────────────────
+/* ── SOLUTION RENDERER ─────────────────────────────────────────────────────
+   Builds the exact same visual as the original docx:
+   deep-navy title, blue section underlines, numbered cards, tables etc.
+*/
+function buildSolHTML(sol, lang) {
+  if (!sol) return '<div style="padding:40px;text-align:center;color:#999">暂无 Solution 内容</div>';
+  var footer = 'Everly Xiong  |  sales11@cesipc.com  |  +86 198 6007 5914（微信 & WhatsApp）';
+  var secNums = lang === 'zh'
+    ? ['一','二','三','四','五','六','七']
+    : ['1.','2.','3.','4.','5.','6.','7.'];
+  var si = 0;
+  function secNum() { return secNums[si++] || String(si); }
+
+  var html = '<div class="sol-doc">';
+
+  // ── Title block ──
+  html += '<div class="sol-doc-product">' + esc(sol.product || '') + '</div>';
+  html += '<div class="sol-doc-subtitle">' + esc(sol.solution || '') + '</div>';
+  html += '<div class="sol-doc-tagline">' + esc(sol.tagline || '') + '</div>';
+
+  // ── Positioning ──
+  if (sol.positioning) {
+    var posLabel = lang === 'zh' ? '产品定位' : 'Product Overview';
+    html += '<div class="sol-sec-hdr"><span class="sol-sec-num">' + secNum() + '</span><span class="sol-sec-title">' + posLabel + '</span></div>';
+    html += '<p class="sol-body-p">' + esc(sol.positioning) + '</p>';
+  }
+
+  // ── Pain points ──
+  if (sol.painPoints && sol.painPoints.length) {
+    var painLabel = lang === 'zh' ? '行业痛点' : 'Industry Pain Points';
+    html += '<div class="sol-sec-hdr"><span class="sol-sec-num">' + secNum() + '</span><span class="sol-sec-title">' + painLabel + '</span></div>';
+    var col1 = lang === 'zh' ? '痛点' : 'Pain Point';
+    var col2 = lang === 'zh' ? '现场影响' : 'Field Impact';
+    html += '<table class="sol-pain-table"><thead><tr><th></th><th>' + col1 + '</th><th>' + col2 + '</th></tr></thead><tbody>';
+    sol.painPoints.forEach(function(row, i) {
+      var alt = i % 2 !== 0;
+      html += '<tr><td class="icon-cell">' + esc(row.icon || '') + '</td>'
+        + '<td class="prob-cell" style="' + (alt ? 'background:var(--sol-light)' : '') + '">' + esc(row.problem || '') + '</td>'
+        + '<td class="desc-cell" style="' + (alt ? 'background:var(--sol-pale)' : '') + '">' + esc(row.impact || '') + '</td></tr>';
+    });
+    html += '</tbody></table>';
+  }
+
+  // ── Features ──
+  if (sol.features && sol.features.length) {
+    var featLabel = lang === 'zh' ? '核心卖点' : 'Key Features';
+    html += '<div class="sol-sec-hdr"><span class="sol-sec-num">' + secNum() + '</span><span class="sol-sec-title">' + featLabel + '</span></div>';
+
+    // Group by subSection if present
+    var groups = {};
+    var groupOrder = [];
+    sol.features.forEach(function(f) {
+      var g = f.group || '';
+      if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
+      groups[g].push(f);
+    });
+    groupOrder.forEach(function(g) {
+      if (g) {
+        html += '<div class="sol-sub-hdr"><span class="sol-sub-mark">▎</span><span class="sol-sub-title">' + esc(g) + '</span></div>';
+      }
+      groups[g].forEach(function(f, i) {
+        var num = String(i + 1).padStart(2, '0');
+        html += '<div class="sol-card">'
+          + '<div class="sol-card-num">' + esc(f.num || num) + '</div>'
+          + '<div class="sol-card-body">'
+          + '<div class="sol-card-title">' + esc(f.title || '') + '</div>'
+          + '<div class="sol-card-desc">' + esc(f.body || '') + '</div>'
+          + (f.quote ? '<div class="sol-card-quote">' + esc(f.quote) + '</div>' : '')
+          + '</div></div>';
+      });
+    });
+  }
+
+  // ── Specs ──
+  if (sol.specs && sol.specs.length) {
+    var specLabel = lang === 'zh' ? '接口规格' : 'Interface Specifications';
+    var specH1 = lang === 'zh' ? '接口类型' : 'Interface';
+    var specH2 = lang === 'zh' ? '规格' : 'Specification';
+    html += '<div class="sol-sec-hdr"><span class="sol-sec-num">' + secNum() + '</span><span class="sol-sec-title">' + specLabel + '</span></div>';
+    html += '<table class="sol-spec-table"><thead><tr><th>' + specH1 + '</th><th>' + specH2 + '</th></tr></thead><tbody>';
+    sol.specs.forEach(function(row, i) {
+      var alt = i % 2 === 0;
+      html += '<tr><td class="label-cell" style="' + (alt ? 'background:var(--sol-light)' : '') + '">' + esc(row.label || '') + '</td>'
+        + '<td class="val-cell" style="' + (alt ? 'background:var(--sol-pale)' : '') + '">' + esc(row.value || '') + '</td></tr>';
+    });
+    html += '</tbody></table>';
+  }
+
+  // ── Use cases ──
+  if (sol.usecases && sol.usecases.length) {
+    var ucLabel = lang === 'zh' ? '典型应用场景' : 'Typical Applications';
+    html += '<div class="sol-sec-hdr"><span class="sol-sec-num">' + secNum() + '</span><span class="sol-sec-title">' + ucLabel + '</span></div>';
+    sol.usecases.forEach(function(uc) {
+      html += '<div class="sol-usecase-item">'
+        + '<div class="sol-usecase-icon">' + esc(uc.icon || '') + '</div>'
+        + '<div class="sol-usecase-content">'
+        + '<div class="sol-usecase-title">' + esc(uc.title || '') + '</div>'
+        + '<div class="sol-usecase-desc">' + esc(uc.desc || '') + '</div>'
+        + (uc.sys ? '<div class="sol-usecase-sys">' + esc(uc.sys) + '</div>' : '')
+        + '</div></div>';
+    });
+  }
+
+  // ── Summary ──
+  if (sol.summary && (sol.summary.intro || (sol.summary.rows && sol.summary.rows.length))) {
+    var sumLabel = lang === 'zh' ? '方案总结' : 'Solution Summary';
+    html += '<div class="sol-sec-hdr"><span class="sol-sec-num">' + secNum() + '</span><span class="sol-sec-title">' + sumLabel + '</span></div>';
+    if (sol.summary.intro) html += '<p class="sol-body-p">' + esc(sol.summary.intro) + '</p>';
+    if (sol.summary.rows && sol.summary.rows.length) {
+      var sh1 = lang === 'zh' ? '⚠  现场问题' : '⚠  Pain Point';
+      var sh2 = lang === 'zh' ? '✔  解决能力' : '✔  Our Solution';
+      html += '<table class="sol-summary-table"><thead><tr><th>' + sh1 + '</th><th>' + sh2 + '</th></tr></thead><tbody>';
+      sol.summary.rows.forEach(function(row) {
+        html += '<tr><td>' + esc(row.problem || '') + '</td><td>' + esc(row.solution || '') + '</td></tr>';
+      });
+      html += '</tbody></table>';
+    }
+  }
+
+  // ── Contact ──
+  var ctLabel = lang === 'zh' ? '联系我们' : 'Contact Us';
+  html += '<div class="sol-sec-hdr"><span class="sol-sec-num">' + secNum() + '</span><span class="sol-sec-title">' + ctLabel + '</span></div>';
+  html += '<p class="sol-contact">' + esc(sol.contact || (lang === 'zh' ? '如需详细技术规格、定制配置方案或项目报价，请联系我们的销售工程师，一个工作日内回复。' : 'For detailed technical specifications, custom configuration or pricing, please contact our sales engineer. Response within one business day.')) + '</p>';
+
+  // ── Footer ──
+  html += '<div class="sol-footer">' + esc(footer) + '</div>';
+  html += '</div>';
+  return html;
+}
+
+/* ── DATA & STATE ──────────────────────────────────────────────────────── */
 var DEFAULT_CATS = [
-  {name:'计算与系统性能', emoji:'⚡', color:'#5b8dee', fieldId:'f_perf'},
-  {name:'工业稳定运行',   emoji:'🏭', color:'#43d9a0', fieldId:'f_stab'},
-  {name:'工业环境适应',   emoji:'🛡', color:'#f0a84a', fieldId:'f_env'},
-  {name:'连接与扩展',     emoji:'🔗', color:'#c678dd', fieldId:'f_conn'}
+  {name:'计算与系统性能',emoji:'⚡',color:'#5b8dee'},{name:'工业稳定运行',emoji:'🏭',color:'#43d9a0'},
+  {name:'工业环境适应',emoji:'🛡',color:'#f0a84a'},{name:'连接与扩展',emoji:'🔗',color:'#c678dd'}
 ];
-var EXTRA_COLORS = ['#e06c75','#56b6c2','#98c379','#e5c07b','#d19a66','#abb2bf','#ff7f50','#9370db'];
-
-// All possible table columns
+var EXTRA_COLORS = ['#e06c75','#56b6c2','#98c379','#e5c07b','#d19a66','#ff7f50','#9370db'];
 var ALL_COL_DEFS = [
-  {key:'编号',      label:'#',        width:50,  fixed:true},
-  {key:'时间',      label:'日期',     width:90},
-  {key:'产品类型',  label:'类型',     width:110},
-  {key:'型号',      label:'型号',     width:145},
-  {key:'料号',      label:'料号',     width:130},
-  {key:'料号描述',  label:'料号描述', width:200},
-  {key:'产品特点',  label:'产品特点', width:160},
-  {key:'应用场景',  label:'应用场景', width:130},
-  {key:'行业痛点',  label:'行业痛点', width:160},
-  {key:'销售亮点',  label:'销售亮点', width:160},
-  {key:'产品介绍',  label:'产品介绍', width:160},
-  {key:'模块构成',  label:'模块构成', width:140},
-  {key:'计算与系统性能', label:'计算性能', width:160},
-  {key:'工业稳定运行',   label:'工业稳定', width:160},
-  {key:'工业环境适应',   label:'环境适应', width:160},
-  {key:'连接与扩展',     label:'连接扩展', width:160}
+  {key:'编号',label:'#',width:50,fixed:true},{key:'时间',label:'日期',width:90},
+  {key:'产品类型',label:'类型',width:110},{key:'型号',label:'型号',width:145},
+  {key:'料号',label:'料号',width:130},{key:'料号描述',label:'料号描述',width:200},
+  {key:'产品特点',label:'产品特点',width:160},{key:'应用场景',label:'应用场景',width:130},
+  {key:'行业痛点',label:'行业痛点',width:160},{key:'销售亮点',label:'销售亮点',width:160},
+  {key:'_sol',label:'Solution',width:110}
 ];
-
-var TC = {
-  'EPC BOX PC':{cls:'t-blu',dot:'#5b8dee'},
-  'EPC PANEL PC':{cls:'t-grn',dot:'#43d9a0'},
-  'UTC':{cls:'t-gld',dot:'#f0a84a'},
-  'AI':{cls:'t-pur',dot:'#c678dd'},
-  'WPC':{cls:'t-org',dot:'#ffa03c'}
-};
+var TC={'EPC BOX PC':{cls:'t-blu',dot:'#5b8dee'},'EPC PANEL PC':{cls:'t-grn',dot:'#43d9a0'},'UTC':{cls:'t-gld',dot:'#f0a84a'},'AI':{cls:'t-pur',dot:'#c678dd'},'WPC':{cls:'t-org',dot:'#ffa03c'}};
 function tc(t){return TC[t]||{cls:'t-blu',dot:'#5b8dee'};}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-// ─── STATE ──────────────────────────────────────────────────────────────────
 function loadState(){
   try{
-    var p=localStorage.getItem('everly_p');
-    var s=localStorage.getItem('everly_s');
-    var c=localStorage.getItem('everly_colcfg');
-    var cw=localStorage.getItem('everly_colwidths');
+    var p=localStorage.getItem('everly_p'),s=localStorage.getItem('everly_s'),
+        c=localStorage.getItem('everly_colcfg'),cw=localStorage.getItem('everly_colwidths'),
+        sols=localStorage.getItem('everly_sols');
     return{
-      products: p?JSON.parse(p):INITIAL.sheet1.map(function(r,i){return Object.assign({},r,{_id:i+1});}),
-      sel: s?JSON.parse(s):INITIAL.sheet2,
-      visibleCols: c?JSON.parse(c):['编号','时间','产品类型','型号','料号','料号描述','产品特点','应用场景'],
-      colWidths: cw?JSON.parse(cw):{}
+      products:p?JSON.parse(p):INITIAL.sheet1.map(function(r,i){return Object.assign({},r,{_id:i+1});}),
+      sel:s?JSON.parse(s):INITIAL.sheet2,
+      visibleCols:c?JSON.parse(c):['编号','时间','产品类型','型号','料号','料号描述','产品特点','应用场景','_sol'],
+      colWidths:cw?JSON.parse(cw):{},solutions:sols?JSON.parse(sols):{}
     };
-  }catch(e){
-    return{
-      products:INITIAL.sheet1.map(function(r,i){return Object.assign({},r,{_id:i+1});}),
-      sel:INITIAL.sheet2,
-      visibleCols:['编号','时间','产品类型','型号','料号','料号描述','产品特点','应用场景'],
-      colWidths:{}
-    };
-  }
+  }catch(e){return{products:INITIAL.sheet1.map(function(r,i){return Object.assign({},r,{_id:i+1});}),sel:INITIAL.sheet2,visibleCols:['编号','时间','产品类型','型号','料号','料号描述','产品特点','应用场景','_sol'],colWidths:{},solutions:{}};}
 }
-var st=loadState();
-var products=st.products, sel=st.sel, visibleCols=st.visibleCols, colWidths=st.colWidths;
-
-// Migrate sel
+var st=loadState(),products=st.products,sel=st.sel,visibleCols=st.visibleCols,colWidths=st.colWidths,solutions=st.solutions;
 if(!sel.cats) sel.cats=DEFAULT_CATS.map(function(c){return Object.assign({},c);});
 if(!sel.sub_headers) sel.sub_headers={};
-sel.items.forEach(function(it,i){
-  if(!it._sid) it._sid='s'+i;
-  sel.cats.forEach(function(c){if(it[c.name]===undefined) it[c.name]='';});
-});
-
-var filtered=products.slice(), sCol=-1, sDir=1, editId=null, refFieldId=null, curCat=0;
+sel.items.forEach(function(it,i){if(!it._sid) it._sid='s'+i; sel.cats.forEach(function(c){if(it[c.name]===undefined) it[c.name]='';});});
+var filtered=products.slice(),sCol=-1,sDir=1,sortKey='',editId=null,refFieldId=null,curCat=0,curSolLang='zh';
 
 function persist(){
   try{
-    localStorage.setItem('everly_p',JSON.stringify(products));
-    localStorage.setItem('everly_s',JSON.stringify(sel));
-    localStorage.setItem('everly_colcfg',JSON.stringify(visibleCols));
-    localStorage.setItem('everly_colwidths',JSON.stringify(colWidths));
-    var el=document.getElementById('savedMsg');
-    el.classList.add('show');
-    clearTimeout(el._t);
-    el._t=setTimeout(function(){el.classList.remove('show');},1800);
+    localStorage.setItem('everly_p',JSON.stringify(products));localStorage.setItem('everly_s',JSON.stringify(sel));
+    localStorage.setItem('everly_colcfg',JSON.stringify(visibleCols));localStorage.setItem('everly_colwidths',JSON.stringify(colWidths));
+    localStorage.setItem('everly_sols',JSON.stringify(solutions));
+    var el=document.getElementById('savedMsg');el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(function(){el.classList.remove('show');},1800);
   }catch(e){}
 }
-function toast(msg){
-  var t=document.getElementById('toast');
-  t.textContent='✓ '+msg; t.classList.add('show');
-  clearTimeout(t._t); t._t=setTimeout(function(){t.classList.remove('show');},1800);
+function toast(msg){var t=document.getElementById('toast');t.textContent='✓ '+msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},1800);}
+
+/* ── SOLUTION FORM HELPERS ─────────────────────────────────────────────── */
+function makeSolRowEl(type, placeholder1, placeholder2, placeholder3, val, onRemove) {
+  var row = document.createElement('div');
+  row.className = 'sol-table-row';
+  var f1 = document.createElement('input'); f1.className='fi'; f1.placeholder=placeholder1; f1.value=val&&val[0]||'';
+  var f2 = document.createElement('input'); f2.className='fi'; f2.placeholder=placeholder2; f2.value=val&&val[1]||'';
+  row.appendChild(f1); row.appendChild(f2);
+  if (placeholder3) {
+    var f3 = document.createElement('input'); f3.className='fi'; f3.placeholder=placeholder3; f3.value=val&&val[2]||'';
+    row.appendChild(f3);
+  }
+  var rm = document.createElement('button'); rm.textContent='✕'; rm.style.cssText='padding:4px 8px;border:1px solid var(--bdr);background:transparent;color:var(--txt3);border-radius:5px;cursor:pointer;font-size:12px;flex-shrink:0;';
+  rm.addEventListener('click', function(){row.remove(); if(onRemove) onRemove();});
+  row.appendChild(rm);
+  return row;
 }
 
-// ─── INIT ────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded',function(){
-  // Tab switching
+function makeFeatureEl(f, lang, onRemove) {
+  var wrap = document.createElement('div');
+  wrap.className = 'sol-feature-item';
+  var rm = document.createElement('button'); rm.className='sol-rm-btn'; rm.textContent='✕';
+  rm.addEventListener('click', function(){wrap.remove();});
+  wrap.appendChild(rm);
+  function fi(lbl, id, val, ph, tall) {
+    var g=document.createElement('div'); g.className='fgrp'; g.style.marginBottom='7px';
+    var l=document.createElement('label'); l.className='flbl'; l.textContent=lbl;
+    var el; if(tall){el=document.createElement('textarea');el.className='fta';el.rows=2;}else{el=document.createElement('input');el.className='fi';}
+    el.placeholder=ph||''; el.value=val||''; el.id=id;
+    g.appendChild(l); g.appendChild(el); return g;
+  }
+  var grpTitle = lang==='zh'?'卡片标题':'Title';
+  var grpBody = lang==='zh'?'内容说明':'Description';
+  var grpQuote = lang==='zh'?'引用语（斜体绿色）':'Quote (italic teal)';
+  var grpGroup = lang==='zh'?'分组标题（如：环境防护）':'Group (e.g. Environmental)';
+  var pref = lang+'_feat_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)+'_';
+  wrap.appendChild(fi(grpGroup, pref+'group', f&&f.group, lang==='zh'?'环境防护 / 硬件性能':'Environmental Protection'));
+  wrap.appendChild(fi(grpTitle, pref+'title', f&&f.title, '01 全贴合屏（OCA工艺）— 从结构层消除凝露'));
+  wrap.appendChild(fi(grpBody, pref+'body', f&&f.body, lang==='zh'?'详细说明内容…':'Detailed description…', true));
+  wrap.appendChild(fi(grpQuote, pref+'quote', f&&f.quote, lang==='zh'?'「装上去不起雾，用一年还跟新的一样」':'"No fogging after installation…"'));
+  wrap._pref = pref;
+  return wrap;
+}
+
+function makeUsecaseEl(uc, lang) {
+  var row = document.createElement('div');
+  row.className = 'sol-table-row';
+  row.style.alignItems = 'flex-start';
+  function inp(ph, val, w) { var el=document.createElement('input');el.className='fi';el.placeholder=ph;el.value=val||'';if(w)el.style.maxWidth=w;return el; }
+  var ic=inp('图标',uc&&uc.icon,'52px');
+  var ti=inp(lang==='zh'?'场景名称':'Scene',uc&&uc.title);
+  var de=inp(lang==='zh'?'场景描述':'Description',uc&&uc.desc);
+  var sy=inp(lang==='zh'?'配套系统（蓝色小字）':'System (blue small)',uc&&uc.sys);
+  var rm=document.createElement('button');rm.textContent='✕';rm.style.cssText='padding:4px 8px;border:1px solid var(--bdr);background:transparent;color:var(--txt3);border-radius:5px;cursor:pointer;font-size:12px;flex-shrink:0;';
+  rm.addEventListener('click',function(){row.remove();});
+  row._els={icon:ic,title:ti,desc:de,sys:sy};
+  [ic,ti,de,sy,rm].forEach(function(el){row.appendChild(el);});
+  return row;
+}
+
+function initSolForm(lang, sol) {
+  var p=lang+'_';
+  function v(id){var el=document.getElementById(p+id);return el?el.value.trim():'';}
+  function s(id,val){var el=document.getElementById(p+id);if(el) el.value=val||'';}
+  // Set simple fields
+  s('product', sol&&sol.product); s('solution', sol&&sol.solution);
+  s('tagline', sol&&sol.tagline); s('positioning', sol&&sol.positioning);
+  s('summary_intro', sol&&sol.summary&&sol.summary.intro);
+  s('contact', sol&&sol.contact);
+
+  // Pain rows
+  var painCont=document.getElementById(p+'pain_rows'); painCont.innerHTML='';
+  (sol&&sol.painPoints||[]).forEach(function(row){addPainRow(lang, row);});
+
+  // Feature items
+  var featCont=document.getElementById(p+'feature_items'); featCont.innerHTML='';
+  (sol&&sol.features||[]).forEach(function(f){
+    var el=makeFeatureEl(f, lang);
+    featCont.appendChild(el);
+  });
+
+  // Spec rows
+  var specCont=document.getElementById(p+'spec_rows'); specCont.innerHTML='';
+  (sol&&sol.specs||[]).forEach(function(row){addSpecRow(lang, row);});
+
+  // Usecase rows
+  var ucCont=document.getElementById(p+'usecase_rows'); ucCont.innerHTML='';
+  (sol&&sol.usecases||[]).forEach(function(uc){
+    var el=makeUsecaseEl(uc, lang);
+    ucCont.appendChild(el);
+  });
+
+  // Summary rows
+  var sumCont=document.getElementById(p+'summary_rows'); sumCont.innerHTML='';
+  (sol&&sol.summary&&sol.summary.rows||[]).forEach(function(row){addSummaryRow(lang, row);});
+}
+
+function addPainRow(lang, val) {
+  var cont=document.getElementById(lang+'_pain_rows');
+  var ph1=lang==='zh'?'痛点标题':'Pain point title';
+  var ph2=lang==='zh'?'现场影响':'Field impact';
+  var row=makeSolRowEl('pain', '图标', ph1, ph2, val?[val.icon,val.problem,val.impact]:null);
+  cont.appendChild(row);
+}
+function addSpecRow(lang, val) {
+  var cont=document.getElementById(lang+'_spec_rows');
+  var ph1=lang==='zh'?'接口类型':'Interface type';
+  var ph2=lang==='zh'?'规格描述':'Specification';
+  var row=makeSolRowEl('spec', ph1, ph2, null, val?[val.label,val.value]:null);
+  cont.appendChild(row);
+}
+function addSummaryRow(lang, val) {
+  var cont=document.getElementById(lang+'_summary_rows');
+  var ph1=lang==='zh'?'现场问题':'Pain point';
+  var ph2=lang==='zh'?'解决能力':'Solution';
+  var row=makeSolRowEl('sum', ph1, ph2, null, val?[val.problem,val.solution]:null);
+  cont.appendChild(row);
+}
+
+function readSolForm(lang) {
+  var p=lang+'_';
+  function v(id){var el=document.getElementById(p+id);return el?el.value.trim():'';}
+  var sol={};
+  sol.product=v('product'); sol.solution=v('solution');
+  sol.tagline=v('tagline'); sol.positioning=v('positioning');
+  sol.contact=v('contact');
+
+  // Pain
+  sol.painPoints=[];
+  document.querySelectorAll('#'+p+'pain_rows .sol-table-row').forEach(function(row){
+    var ins=row.querySelectorAll('input');
+    if(ins[0]||ins[1]||ins[2]) sol.painPoints.push({icon:ins[0]?ins[0].value:'',problem:ins[1]?ins[1].value:'',impact:ins[2]?ins[2].value:''});
+  });
+
+  // Features
+  sol.features=[];
+  document.querySelectorAll('#'+p+'feature_items .sol-feature-item').forEach(function(item){
+    var pref=item._pref;
+    function fv(sfx){var el=document.getElementById(pref+sfx);return el?el.value.trim():'';}
+    sol.features.push({group:fv('group'),title:fv('title'),body:fv('body'),quote:fv('quote')});
+  });
+
+  // Specs
+  sol.specs=[];
+  document.querySelectorAll('#'+p+'spec_rows .sol-table-row').forEach(function(row){
+    var ins=row.querySelectorAll('input');
+    if(ins[0]&&ins[0].value) sol.specs.push({label:ins[0].value,value:ins[1]?ins[1].value:''});
+  });
+
+  // Use cases
+  sol.usecases=[];
+  document.querySelectorAll('#'+p+'usecase_rows .sol-table-row').forEach(function(row){
+    if(row._els) sol.usecases.push({icon:row._els.icon.value,title:row._els.title.value,desc:row._els.desc.value,sys:row._els.sys.value});
+  });
+
+  // Summary
+  sol.summary={intro:v('summary_intro'),rows:[]};
+  document.querySelectorAll('#'+p+'summary_rows .sol-table-row').forEach(function(row){
+    var ins=row.querySelectorAll('input');
+    if(ins[0]&&ins[0].value) sol.summary.rows.push({problem:ins[0].value,solution:ins[1]?ins[1].value:''});
+  });
+
+  return sol;
+}
+
+/* ── INIT ──────────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function(){
   document.getElementById('tabBtn1').addEventListener('click',function(){switchTab('t1',this);});
   document.getElementById('tabBtn2').addEventListener('click',function(){switchTab('t2',this);});
-  // Header buttons
   document.getElementById('exportBtn').addEventListener('click',exportExcel);
   document.getElementById('addProdBtn').addEventListener('click',openAdd);
-  // Search/filter
   document.getElementById('srch').addEventListener('input',doFilter);
   document.getElementById('typeFilt').addEventListener('change',doFilter);
   document.getElementById('selSrch').addEventListener('input',renderSel);
-  // Column config toggle
-  document.getElementById('colConfigBtn').addEventListener('click',function(){
-    var cc=document.getElementById('colConfig');
-    cc.classList.toggle('open');
-    if(cc.classList.contains('open')) buildColChips();
-  });
-  // Edit modal
+  document.getElementById('colConfigBtn').addEventListener('click',function(){var cc=document.getElementById('colConfig');cc.classList.toggle('open');if(cc.classList.contains('open'))buildColChips();});
   document.getElementById('closeEditBtn').addEventListener('click',closeEdit);
   document.getElementById('closeEditBtn2').addEventListener('click',closeEdit);
   document.getElementById('saveBtn').addEventListener('click',saveProduct);
   document.getElementById('delBtn').addEventListener('click',delProduct);
   document.getElementById('editOv').addEventListener('click',function(e){if(e.target===this)closeEdit();});
-  // Ref drawer
-  document.getElementById('closeRefBtn').addEventListener('click',closeRef);
-  document.getElementById('refBd').addEventListener('click',closeRef);
-  // Ref buttons in modal (static cats)
-  document.querySelectorAll('.ref-btn[data-catidx]').forEach(function(btn){
-    btn.addEventListener('click',function(){
-      var idx=parseInt(btn.getAttribute('data-catidx'));
-      var fieldMap=['f_perf','f_stab','f_env','f_conn'];
-      openRef(idx, fieldMap[idx]);
+  document.querySelectorAll('.modal-tab').forEach(function(tab){
+    tab.addEventListener('click',function(){
+      document.querySelectorAll('.modal-tab').forEach(function(t){t.classList.remove('active');});
+      document.querySelectorAll('.modal-panel').forEach(function(p){p.classList.remove('active');});
+      tab.classList.add('active'); document.getElementById(tab.dataset.panel).classList.add('active');
     });
   });
-  // Add cat button
+  // Solution lang tabs
+  document.getElementById('solLangZh').addEventListener('click',function(){switchSolLang('zh');});
+  document.getElementById('solLangEn').addEventListener('click',function(){switchSolLang('en');});
+  // Solution add buttons
+  document.getElementById('zh_add_pain').addEventListener('click',function(){addPainRow('zh');});
+  document.getElementById('en_add_pain').addEventListener('click',function(){addPainRow('en');});
+  document.getElementById('zh_add_feature').addEventListener('click',function(){var el=makeFeatureEl(null,'zh');document.getElementById('zh_feature_items').appendChild(el);});
+  document.getElementById('en_add_feature').addEventListener('click',function(){var el=makeFeatureEl(null,'en');document.getElementById('en_feature_items').appendChild(el);});
+  document.getElementById('zh_add_spec').addEventListener('click',function(){addSpecRow('zh');});
+  document.getElementById('en_add_spec').addEventListener('click',function(){addSpecRow('en');});
+  document.getElementById('zh_add_usecase').addEventListener('click',function(){var el=makeUsecaseEl(null,'zh');document.getElementById('zh_usecase_rows').appendChild(el);});
+  document.getElementById('en_add_usecase').addEventListener('click',function(){var el=makeUsecaseEl(null,'en');document.getElementById('en_usecase_rows').appendChild(el);});
+  document.getElementById('zh_add_summary').addEventListener('click',function(){addSummaryRow('zh');});
+  document.getElementById('en_add_summary').addEventListener('click',function(){addSummaryRow('en');});
+  // Preview & Export
+  document.getElementById('previewSolBtn').addEventListener('click',function(){previewSol(curSolLang);});
+  document.getElementById('exportSolBtn').addEventListener('click',function(){exportSolPdf(curSolLang);});
+  document.getElementById('closeSolViewBtn').addEventListener('click',closeSolView);
+  document.getElementById('solViewOv').addEventListener('click',function(e){if(e.target===this)closeSolView();});
+  document.getElementById('solViewExportBtn').addEventListener('click',function(){exportSolPdf(curSolLang);});
+  document.getElementById('solLangToggleBtn').addEventListener('click',function(){previewSol(curSolLang==='zh'?'en':'zh');});
+  // Ref btns
+  document.querySelectorAll('.ref-btn[data-catidx]').forEach(function(btn){
+    btn.addEventListener('click',function(){var idx=parseInt(btn.getAttribute('data-catidx'));var fids=['f_perf','f_stab','f_env','f_conn'];openRef(idx,fids[idx]);});
+  });
   document.getElementById('addCatBtn').addEventListener('click',showAddCatForm);
-  // Mini modal
+  document.getElementById('closeRefBtn').addEventListener('click',closeRef);
+  document.getElementById('refBd').addEventListener('click',closeRef);
   document.getElementById('miniCancel').addEventListener('click',closeMini);
   document.getElementById('miniOv').addEventListener('click',function(e){if(e.target===this)closeMini();});
 
-  buildTypeFilter();
-  renderStats();
-  buildColConfig();
-  renderTable();
-  renderSidebar();
-  renderSel();
+  buildTypeFilter(); renderStats(); buildColConfig(); renderTable(); renderSidebar(); renderSel();
 });
 
-// ─── TABLE COLUMNS ────────────────────────────────────────────────────────────
-function getAllColDefs(){
-  // Include dynamic cat columns
-  var defs=ALL_COL_DEFS.slice();
-  sel.cats.forEach(function(cat){
-    var exists=defs.some(function(d){return d.key===cat.name;});
-    if(!exists) defs.push({key:cat.name, label:cat.emoji+' '+cat.name, width:160});
-  });
-  return defs;
+function switchSolLang(lang) {
+  curSolLang = lang;
+  document.getElementById('solLangZh').classList.toggle('active', lang==='zh');
+  document.getElementById('solLangEn').classList.toggle('active', lang==='en');
+  document.getElementById('solFieldsZh').style.display = lang==='zh'?'':'none';
+  document.getElementById('solFieldsEn').style.display = lang==='en'?'':'none';
 }
 
-function buildColConfig(){
-  // Rebuild col config chips
-  var defs=getAllColDefs();
-  var grid=document.getElementById('colChips');
-  grid.innerHTML='';
-  defs.forEach(function(def){
-    if(def.fixed) return; // #编号 always shown
-    var on=visibleCols.indexOf(def.key)>=0;
-    var chip=document.createElement('span');
-    chip.className='col-chip '+(on?'on':'off');
-    chip.textContent=(on?'✓ ':'')+def.label;
-    chip.addEventListener('click',function(){
-      var idx=visibleCols.indexOf(def.key);
-      if(idx>=0){ visibleCols.splice(idx,1); }
-      else { visibleCols.push(def.key); }
-      persist(); buildColConfig(); renderTable();
-    });
-    grid.appendChild(chip);
-  });
-}
+/* ── COLUMN CONFIG ─────────────────────────────────────────────────────── */
+function getAllColDefs(){var defs=ALL_COL_DEFS.slice();sel.cats.forEach(function(cat){var exists=defs.some(function(d){return d.key===cat.name;});if(!exists) defs.push({key:cat.name,label:cat.emoji+' '+cat.name,width:160});});return defs;}
+function buildColChips(){var defs=getAllColDefs();var grid=document.getElementById('colChips');grid.innerHTML='';defs.forEach(function(def){if(def.fixed)return;var on=visibleCols.indexOf(def.key)>=0;var chip=document.createElement('span');chip.className='col-chip '+(on?'on':'off');chip.textContent=(on?'✓ ':'')+def.label;chip.addEventListener('click',function(){var idx=visibleCols.indexOf(def.key);if(idx>=0)visibleCols.splice(idx,1);else visibleCols.push(def.key);persist();buildColChips();renderTable();});grid.appendChild(chip);});}
+function buildColConfig(){buildColChips();}
+function getActiveCols(){var defs=getAllColDefs();var active=[];defs.forEach(function(d){if(d.key==='编号')active.push(d);});visibleCols.forEach(function(key){if(key==='编号')return;var def=defs.find(function(d){return d.key===key;});if(def)active.push(def);});active.push({key:'__action__',label:'操作',width:100});return active;}
 
-function buildColChips(){ buildColConfig(); }
-
-function getActiveCols(){
-  var defs=getAllColDefs();
-  var active=[];
-  // Always first: 编号
-  defs.forEach(function(d){if(d.key==='编号') active.push(d);});
-  // Then visible cols in order
-  visibleCols.forEach(function(key){
-    if(key==='编号') return;
-    var def=defs.find(function(d){return d.key===key;});
-    if(def) active.push(def);
-  });
-  // Always last: 操作
-  active.push({key:'__action__', label:'操作', width:78});
-  return active;
-}
-
-// ─── COLUMN RESIZE ────────────────────────────────────────────────────────────
+/* ── RESIZE ─────────────────────────────────────────────────────────────  */
 var resizing=null;
-function attachResizeHandles(){
-  document.querySelectorAll('thead th').forEach(function(th){
-    var key=th.getAttribute('data-colkey');
-    if(!key||key==='__action__') return;
-    var handle=th.querySelector('.col-resize');
-    if(!handle) return;
-    handle.addEventListener('mousedown',function(e){
-      e.preventDefault();
-      resizing={th:th, key:key, startX:e.clientX, startW:th.offsetWidth};
-      handle.classList.add('dragging');
-    });
-  });
-  document.addEventListener('mousemove',function(e){
-    if(!resizing) return;
-    var w=Math.max(50, resizing.startW+(e.clientX-resizing.startX));
-    resizing.th.style.width=w+'px';
-    colWidths[resizing.key]=w;
-  });
-  document.addEventListener('mouseup',function(){
-    if(!resizing) return;
-    var handle=resizing.th.querySelector('.col-resize');
-    if(handle) handle.classList.remove('dragging');
-    resizing=null;
-    persist();
-  });
-}
+function attachResizeHandles(){document.querySelectorAll('thead th').forEach(function(th){var key=th.getAttribute('data-colkey');if(!key||key==='__action__')return;var handle=th.querySelector('.col-resize');if(!handle)return;handle.addEventListener('mousedown',function(e){e.preventDefault();resizing={th:th,key:key,startX:e.clientX,startW:th.offsetWidth};handle.classList.add('dragging');});});document.addEventListener('mousemove',function(e){if(!resizing)return;var w=Math.max(50,resizing.startW+(e.clientX-resizing.startX));resizing.th.style.width=w+'px';colWidths[resizing.key]=w;});document.addEventListener('mouseup',function(){if(!resizing)return;var h=resizing.th.querySelector('.col-resize');if(h)h.classList.remove('dragging');resizing=null;persist();});}
 
-// ─── TABLE ────────────────────────────────────────────────────────────────────
-function buildTypeFilter(){
-  var types=[];
-  products.forEach(function(r){if(r['产品类型']&&types.indexOf(r['产品类型'])<0) types.push(r['产品类型']);});
-  var s=document.getElementById('typeFilt');
-  // Clear existing options except first
-  while(s.options.length>1) s.remove(1);
-  types.forEach(function(t){var o=document.createElement('option');o.value=t;o.textContent=t;s.appendChild(o);});
-}
-function renderStats(){
-  var cnt={};
-  products.forEach(function(r){if(r['产品类型']) cnt[r['产品类型']]=(cnt[r['产品类型']]||0)+1;});
-  var html='<div class="stat"><div class="stat-lbl">产品总数</div><div class="stat-val" style="color:var(--acc)">'+products.length+'</div></div>';
-  Object.keys(cnt).forEach(function(k){html+='<div class="stat"><div class="stat-lbl">'+k+'</div><div class="stat-val" style="color:'+tc(k).dot+'">'+cnt[k]+'</div></div>';});
-  document.getElementById('statsBar').innerHTML=html;
-}
-
+/* ── TABLE ──────────────────────────────────────────────────────────────  */
+function buildTypeFilter(){var types=[];products.forEach(function(r){if(r['产品类型']&&types.indexOf(r['产品类型'])<0)types.push(r['产品类型']);});var s=document.getElementById('typeFilt');while(s.options.length>1)s.remove(1);types.forEach(function(t){var o=document.createElement('option');o.value=t;o.textContent=t;s.appendChild(o);});}
+function renderStats(){var cnt={};products.forEach(function(r){if(r['产品类型'])cnt[r['产品类型']]=(cnt[r['产品类型']]||0)+1;});var html='<div class="stat"><div class="stat-lbl">产品总数</div><div class="stat-val" style="color:var(--acc)">'+products.length+'</div></div>';Object.keys(cnt).forEach(function(k){html+='<div class="stat"><div class="stat-lbl">'+k+'</div><div class="stat-val" style="color:'+tc(k).dot+'">'+cnt[k]+'</div></div>';});document.getElementById('statsBar').innerHTML=html;}
 function renderTable(){
-  var cols=getActiveCols();
-  var thead=document.getElementById('theadRow');
-  // Build header
-  thead.innerHTML='';
-  cols.forEach(function(col){
-    var th=document.createElement('th');
-    th.setAttribute('data-colkey',col.key);
-    var w=colWidths[col.key]||col.width;
-    th.style.width=w+'px';
-    if(col.key!=='__action__'){
-      th.classList.add('sortable');
-      th.innerHTML=col.label+'<div class="col-resize"></div>';
-      th.addEventListener('click',function(e){
-        if(e.target.classList.contains('col-resize')) return;
-        doSortByKey(col.key);
-      });
-    } else {
-      th.textContent=col.label;
-    }
-    thead.appendChild(th);
-  });
+  var cols=getActiveCols();var thead=document.getElementById('theadRow');thead.innerHTML='';
+  cols.forEach(function(col){var th=document.createElement('th');th.setAttribute('data-colkey',col.key);var w=colWidths[col.key]||col.width;th.style.width=w+'px';if(col.key!=='__action__'){th.classList.add('sortable');th.innerHTML=esc(col.label)+'<div class="col-resize"></div>';th.addEventListener('click',function(e){if(e.target.classList.contains('col-resize'))return;doSortByKey(col.key);});}else{th.textContent=col.label;}thead.appendChild(th);});
   attachResizeHandles();
-
-  var tbody=document.getElementById('tbody');
-  document.getElementById('cntBadge').textContent='共 '+filtered.length+' 条';
+  var tbody=document.getElementById('tbody');document.getElementById('cntBadge').textContent='共 '+filtered.length+' 条';
   if(!filtered.length){tbody.innerHTML='<tr><td colspan="'+cols.length+'" class="no-data">没有匹配的产品</td></tr>';return;}
   tbody.innerHTML='';
   filtered.forEach(function(r){
-    var tr=document.createElement('tr');
-    tr.addEventListener('click',function(){openEdit(r._id);});
+    var tr=document.createElement('tr');tr.addEventListener('click',function(){openEdit(r._id);});
     cols.forEach(function(col){
       var td=document.createElement('td');
       if(col.key==='__action__'){
         td.addEventListener('click',function(e){e.stopPropagation();});
-        var btn=document.createElement('button');
-        btn.className='btn btn-ghost';
-        btn.style.cssText='padding:4px 10px;font-size:11px';
-        btn.textContent='✏ 编辑';
-        btn.addEventListener('click',function(){openEdit(r._id);});
-        td.appendChild(btn);
+        var g=document.createElement('div');g.style.cssText='display:flex;gap:5px;';
+        var eb=document.createElement('button');eb.className='btn btn-ghost';eb.style.cssText='padding:3px 9px;font-size:11px';eb.textContent='✏ 编辑';eb.addEventListener('click',function(){openEdit(r._id);});g.appendChild(eb);
+        var sol=solutions[String(r._id)];
+        if(sol&&(sol.zh||sol.en)){var sb=document.createElement('button');sb.className='btn btn-ok';sb.style.cssText='padding:3px 9px;font-size:11px';sb.textContent='📄';sb.title='查看 Solution';sb.addEventListener('click',function(){openSolQuick(r._id);});g.appendChild(sb);}
+        td.appendChild(g);
       } else if(col.key==='产品类型'){
-        var t=tc(r['产品类型']);
-        td.innerHTML='<span class="tag '+t.cls+'">'+esc(r['产品类型']||'—')+'</span>';
+        var t=tc(r['产品类型']);td.innerHTML='<span class="tag '+t.cls+'">'+esc(r['产品类型']||'—')+'</span>';
+      } else if(col.key==='_sol'){
+        var sol=solutions[String(r._id)]||{};var b='';
+        if(sol.zh&&(sol.zh.product||sol.zh.solution)) b+='<span class="sol-badge zh">中文</span> ';
+        if(sol.en&&(sol.en.product||sol.en.solution)) b+='<span class="sol-badge en">EN</span>';
+        td.innerHTML=b||'<span style="color:var(--txt3);font-size:11px">—</span>';
       } else {
-        var val=String(r[col.key]||'');
-        td.title=val;
-        if(col.key==='编号'||col.key==='料号'||col.key==='型号') td.classList.add('mono');
-        if(col.key==='编号') td.style.color='var(--txt3)';
-        if(col.key==='时间') td.style.fontSize='12px';
-        td.textContent=val.length>50?val.substring(0,50)+'…':val;
+        var val=String(r[col.key]||'');td.title=val;if(col.key==='编号'||col.key==='料号'||col.key==='型号')td.classList.add('mono');if(col.key==='编号')td.style.color='var(--txt3)';if(col.key==='时间')td.style.fontSize='12px';td.textContent=val.length>50?val.substring(0,50)+'…':val;
       }
       tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
+    });tbody.appendChild(tr);
   });
 }
+function doFilter(){var q=document.getElementById('srch').value.toLowerCase();var type=document.getElementById('typeFilt').value;filtered=products.filter(function(r){return(!type||r['产品类型']===type)&&(!q||JSON.stringify(r).toLowerCase().indexOf(q)>=0);});if(sortKey)applySort();renderTable();}
+function doSortByKey(key){if(sortKey===key)sDir=-sDir;else{sortKey=key;sDir=1;}document.querySelectorAll('thead th').forEach(function(th){th.classList.remove('sa','sd');if(th.getAttribute('data-colkey')===key)th.classList.add(sDir===1?'sa':'sd');});applySort();renderTable();}
+function applySort(){filtered.sort(function(a,b){return(String(a[sortKey]||'')).localeCompare(String(b[sortKey]||''),'zh')*sDir;});}
 
-function doFilter(){
-  var q=document.getElementById('srch').value.toLowerCase();
-  var type=document.getElementById('typeFilt').value;
-  filtered=products.filter(function(r){
-    return(!type||r['产品类型']===type)&&(!q||JSON.stringify(r).toLowerCase().indexOf(q)>=0);
-  });
-  if(sCol>=0) applySort();
-  renderTable();
-}
-var sortKey='';
-function doSortByKey(key){
-  if(sortKey===key) sDir=-sDir; else{sortKey=key;sDir=1;}
-  document.querySelectorAll('thead th').forEach(function(th){th.classList.remove('sa','sd');if(th.getAttribute('data-colkey')===key) th.classList.add(sDir===1?'sa':'sd');});
-  applySort(); renderTable();
-}
-function applySort(){
-  if(!sortKey) return;
-  filtered.sort(function(a,b){return(String(a[sortKey]||'')).localeCompare(String(b[sortKey]||''),'zh')*sDir;});
-}
-
-// ─── EDIT MODAL ───────────────────────────────────────────────────────────────
-var STATIC_FMAP={f_num:'编号',f_date:'时间',f_type:'产品类型',f_model:'型号',f_pn:'料号',f_desc:'料号描述',
-  f_perf:'计算与系统性能',f_stab:'工业稳定运行',f_env:'工业环境适应',f_conn:'连接与扩展',
-  f_module:'模块构成',f_feat:'产品特点',f_intro:'产品介绍',f_pain:'行业痛点',f_high:'销售亮点',f_scene:'应用场景'};
-
-function buildDynFields(r){
-  // Add fields for custom cats (beyond default 4)
-  var container=document.getElementById('dynFields');
-  container.innerHTML='';
-  var customCats=sel.cats.slice(4);
-  var sec=document.getElementById('dynFieldsSection');
-  if(!customCats.length){sec.style.display='none';return;}
-  sec.style.display='';
-  customCats.forEach(function(cat,i){
-    var actualIdx=i+4;
-    var grp=document.createElement('div');
-    grp.className='fgrp full';
-    grp.style.marginTop='10px';
-    var lbl=document.createElement('label');
-    lbl.className='flbl';
-    lbl.innerHTML=cat.emoji+' '+esc(cat.name)+' <span class="ref-btn dyn-ref-btn" data-catidx="'+actualIdx+'" data-fieldid="dynf_'+actualIdx+'">引用卖点库 ↗</span>';
-    var ta=document.createElement('textarea');
-    ta.className='fta tall';
-    ta.id='dynf_'+actualIdx;
-    ta.value=r?r[cat.name]||'':'';
-    grp.appendChild(lbl);
-    grp.appendChild(ta);
-    container.appendChild(grp);
-    // Attach ref btn event
-    lbl.querySelector('.dyn-ref-btn').addEventListener('click',function(btn){
-      return function(){openRef(actualIdx,'dynf_'+actualIdx);};
-    }(null));
-  });
-}
+/* ── EDIT MODAL ─────────────────────────────────────────────────────────  */
+var STATIC_FMAP={f_num:'编号',f_date:'时间',f_type:'产品类型',f_model:'型号',f_pn:'料号',f_desc:'料号描述',f_perf:'计算与系统性能',f_stab:'工业稳定运行',f_env:'工业环境适应',f_conn:'连接与扩展',f_module:'模块构成',f_feat:'产品特点',f_intro:'产品介绍',f_pain:'行业痛点',f_high:'销售亮点',f_scene:'应用场景'};
+function buildDynFields(r){var container=document.getElementById('dynFields');container.innerHTML='';var customCats=sel.cats.slice(4);var sec=document.getElementById('dynFieldsSection');if(!customCats.length){sec.style.display='none';return;}sec.style.display='';customCats.forEach(function(cat,i){var actualIdx=i+4;var grp=document.createElement('div');grp.className='fgrp full';grp.style.marginTop='10px';var lbl=document.createElement('label');lbl.className='flbl';var rb=document.createElement('span');rb.className='ref-btn';rb.textContent='引用卖点库 ↗';rb.addEventListener('click',function(){openRef(actualIdx,'dynf_'+actualIdx);});lbl.innerHTML=cat.emoji+' '+esc(cat.name)+' ';lbl.appendChild(rb);var ta=document.createElement('textarea');ta.className='fta tall';ta.id='dynf_'+actualIdx;ta.value=r?r[cat.name]||'':'';grp.appendChild(lbl);grp.appendChild(ta);container.appendChild(grp);});}
 
 function openEdit(id){
-  var r=null; products.forEach(function(x){if(x._id===id) r=x;});
-  if(!r) return;
+  var r=null;products.forEach(function(x){if(x._id===id)r=x;});if(!r)return;
   editId=id;
   document.getElementById('editTitle').textContent=r['型号']||'产品详情';
   document.getElementById('editSub').textContent=r['料号']||'';
   document.getElementById('delBtn').style.display='';
-  Object.keys(STATIC_FMAP).forEach(function(fid){var el=document.getElementById(fid);if(el) el.value=r[STATIC_FMAP[fid]]||'';});
+  Object.keys(STATIC_FMAP).forEach(function(fid){var el=document.getElementById(fid);if(el)el.value=r[STATIC_FMAP[fid]]||'';});
   buildDynFields(r);
+  // Load solutions
+  var sol=solutions[String(id)]||{};
+  initSolForm('zh', sol.zh||null);
+  initSolForm('en', sol.en||null);
+  switchSolLang('zh');
+  // Reset to info tab
+  document.querySelectorAll('.modal-tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.modal-panel').forEach(function(p){p.classList.remove('active');});
+  document.querySelector('.modal-tab[data-panel="panelInfo"]').classList.add('active');
+  document.getElementById('panelInfo').classList.add('active');
   document.getElementById('editOv').classList.add('open');
 }
 function openAdd(){
-  editId=null;
-  var maxNum=0; products.forEach(function(p){var n=parseInt(p['编号'])||0;if(n>maxNum) maxNum=n;});
-  Object.keys(STATIC_FMAP).forEach(function(id){var el=document.getElementById(id);if(el) el.value='';});
-  document.getElementById('f_num').value=String(maxNum+1);
-  document.getElementById('f_date').value=new Date().toISOString().slice(0,10);
-  document.getElementById('editTitle').textContent='新增产品';
-  document.getElementById('editSub').textContent='填写完毕后点保存';
+  editId=null;var maxNum=0;products.forEach(function(p){var n=parseInt(p['编号'])||0;if(n>maxNum)maxNum=n;});
+  Object.keys(STATIC_FMAP).forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('f_num').value=String(maxNum+1);document.getElementById('f_date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('editTitle').textContent='新增产品';document.getElementById('editSub').textContent='';
   document.getElementById('delBtn').style.display='none';
+  initSolForm('zh',null);initSolForm('en',null);switchSolLang('zh');
   buildDynFields(null);
+  document.querySelectorAll('.modal-tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.modal-panel').forEach(function(p){p.classList.remove('active');});
+  document.querySelector('.modal-tab[data-panel="panelInfo"]').classList.add('active');
+  document.getElementById('panelInfo').classList.add('active');
   document.getElementById('editOv').classList.add('open');
 }
 function closeEdit(){document.getElementById('editOv').classList.remove('open');}
 function saveProduct(){
-  var data={};
-  Object.keys(STATIC_FMAP).forEach(function(fid){var el=document.getElementById(fid);if(el) data[STATIC_FMAP[fid]]=el.value.trim();});
-  // Collect custom cat fields
-  sel.cats.slice(4).forEach(function(cat,i){
-    var el=document.getElementById('dynf_'+(i+4));
-    if(el) data[cat.name]=el.value.trim();
-  });
-  if(editId!==null){
-    for(var i=0;i<products.length;i++){if(products[i]._id===editId){products[i]=Object.assign({},products[i],data);break;}}
+  var data={};Object.keys(STATIC_FMAP).forEach(function(fid){var el=document.getElementById(fid);if(el)data[STATIC_FMAP[fid]]=el.value.trim();});
+  sel.cats.slice(4).forEach(function(cat,i){var el=document.getElementById('dynf_'+(i+4));if(el)data[cat.name]=el.value.trim();});
+  var solZh=readSolForm('zh');var solEn=readSolForm('en');
+  var pid;
+  if(editId!==null){for(var i=0;i<products.length;i++){if(products[i]._id===editId){products[i]=Object.assign({},products[i],data);break;}}pid=editId;}
+  else{data._id=Date.now();products.push(data);pid=data._id;buildTypeFilter();}
+  solutions[String(pid)]={zh:solZh,en:solEn};
+  filtered=products.slice();renderStats();renderTable();persist();closeEdit();toast('保存成功');
+}
+function delProduct(){if(!confirm('确认删除该产品？'))return;delete solutions[String(editId)];products=products.filter(function(p){return p._id!==editId;});filtered=products.slice();renderStats();renderTable();persist();closeEdit();toast('已删除');}
+
+/* ── SOLUTION PREVIEW & PDF ──────────────────────────────────────────── */
+function previewSol(lang) {
+  curSolLang = lang;
+  var sol = readSolForm(lang);
+  var r=null; if(editId!==null) products.forEach(function(x){if(x._id===editId)r=x;});
+  document.getElementById('solViewTitle').textContent = (r?r['型号']:'') + ' — ' + (lang==='zh'?'中文 Solution':'English Solution');
+  document.getElementById('solViewMeta').textContent = r?(r['产品类型']||'')+(r['料号']?' · '+r['料号']:''):'';
+  document.getElementById('solViewBody').innerHTML = buildSolHTML(sol, lang);
+  // Show toggle if both have content
+  var savedSol = solutions[String(editId)]||{};
+  var bothExist = (savedSol.zh&&savedSol.zh.product)||(savedSol.en&&savedSol.en.product);
+  document.getElementById('solLangToggleBtn').style.display = bothExist?'':'none';
+  document.getElementById('solLangToggleBtn').textContent = lang==='zh'?'Switch to English':'切换中文';
+  document.getElementById('solViewExportBtn').textContent = lang==='zh'?'⬇ 导出 PDF':'⬇ Export PDF';
+  document.getElementById('solViewOv').classList.add('open');
+}
+function closeSolView(){document.getElementById('solViewOv').classList.remove('open');}
+
+function openSolQuick(id) {
+  var sol = solutions[String(id)]||{};
+  var lang = (sol.zh&&sol.zh.product)?'zh':'en';
+  curSolLang = lang;
+  var r=null; products.forEach(function(x){if(x._id===id)r=x;});
+  document.getElementById('solViewTitle').textContent = (r?r['型号']:'') + ' — ' + (lang==='zh'?'中文 Solution':'English Solution');
+  document.getElementById('solViewMeta').textContent = r?(r['产品类型']||'')+(r['料号']?' · '+r['料号']:''):'';
+  document.getElementById('solViewBody').innerHTML = buildSolHTML(sol[lang], lang);
+  var toggle = document.getElementById('solLangToggleBtn');
+  if(sol.zh&&sol.zh.product&&sol.en&&sol.en.product){toggle.style.display='';toggle.textContent=lang==='zh'?'Switch to English':'切换中文';}
+  else{toggle.style.display='none';}
+  toggle.onclick = function(){
+    curSolLang = curSolLang==='zh'?'en':'zh';
+    document.getElementById('solViewBody').innerHTML = buildSolHTML(sol[curSolLang], curSolLang);
+    toggle.textContent = curSolLang==='zh'?'Switch to English':'切换中文';
+    document.getElementById('solViewExportBtn').textContent = curSolLang==='zh'?'⬇ 导出 PDF':'⬇ Export PDF';
+  };
+  document.getElementById('solViewExportBtn').textContent = lang==='zh'?'⬇ 导出 PDF':'⬇ Export PDF';
+  document.getElementById('solViewOv').classList.add('open');
+}
+
+function exportSolPdf(lang) {
+  // Read current form or saved
+  var sol;
+  if(document.getElementById('solViewOv').classList.contains('open')){
+    // export from preview - re-read form
+    if(editId!==null) sol=readSolForm(lang);
+    else{var saved=solutions[String(editId)]||{};sol=saved[lang];}
   } else {
-    data._id=Date.now(); products.push(data);
-    buildTypeFilter();
+    sol=readSolForm(lang);
   }
-  filtered=products.slice(); renderStats(); renderTable(); persist(); closeEdit(); toast('保存成功');
-}
-function delProduct(){
-  if(!confirm('确认删除该产品？')) return;
-  products=products.filter(function(p){return p._id!==editId;});
-  filtered=products.slice(); renderStats(); renderTable(); persist(); closeEdit(); toast('已删除');
-}
-
-// ─── SELECTION ───────────────────────────────────────────────────────────────
-function renderSidebar(){
-  var list=document.getElementById('catList');
-  list.innerHTML='';
-  sel.cats.forEach(function(cat,i){
-    var cnt=0; sel.items.forEach(function(it){if((it[cat.name]||'').trim()) cnt++;});
-    var btn=document.createElement('button');
-    btn.className='cat-btn'+(i===curCat?' active':'');
-    btn.innerHTML='<span>'+cat.emoji+'</span><span style="flex:1;text-align:left">'+esc(cat.name)+'</span>'
-      +'<span class="cpill">'+cnt+'</span>'
-      +'<span class="cat-btn-actions">'
-      +'<button class="cat-action" title="重命名">✏</button>'
-      +(i>0?'<button class="cat-action" title="上移">↑</button>':'')
-      +(i<sel.cats.length-1?'<button class="cat-action" title="下移">↓</button>':'')
-      +(i>=4?'<button class="cat-action danger" title="删除">✕</button>':'')
-      +'</span>';
-    (function(idx,catObj){
-      btn.addEventListener('click',function(e){
-        if(e.target.closest('.cat-btn-actions')) return;
-        switchCat(idx);
-      });
-      var actions=btn.querySelectorAll('.cat-action');
-      var ai=0;
-      // Rename
-      actions[ai++].addEventListener('click',function(e){e.stopPropagation();renameCat(idx);});
-      // Up
-      if(i>0) actions[ai++].addEventListener('click',function(e){e.stopPropagation();moveCat(idx,-1);});
-      // Down
-      if(i<sel.cats.length-1) actions[ai++].addEventListener('click',function(e){e.stopPropagation();moveCat(idx,1);});
-      // Delete (only custom)
-      if(i>=4) actions[ai++].addEventListener('click',function(e){e.stopPropagation();deleteCat(idx);});
-    })(i,cat);
-    list.appendChild(btn);
-  });
+  var html=buildSolHTML(sol, lang);
+  var pa=document.getElementById('printArea');
+  pa.innerHTML=html;pa.style.display='block';
+  // Inject print CSS override
+  var ps=document.createElement('style');ps.id='_pso';
+  ps.textContent='@media print{body,html{background:#fff!important;} .hdr,.tabs-bar,.main,.modal,.ref-drawer,.toast,.mini-ov,.ov{display:none!important;} #printArea{display:block!important;position:fixed;inset:0;overflow:auto;background:#fff;} .sol-doc{font-size:10pt;} .sol-doc-product{font-size:22pt;} .sol-doc-subtitle{font-size:13pt;} .sol-sec-hdr{margin-top:14pt;} }';
+  document.head.appendChild(ps);
+  setTimeout(function(){
+    window.print();
+    setTimeout(function(){pa.style.display='none';pa.innerHTML='';var s=document.getElementById('_pso');if(s)s.remove();},800);
+  },200);
 }
 
+/* ── SELECTION ──────────────────────────────────────────────────────── */
+function renderSidebar(){var list=document.getElementById('catList');list.innerHTML='';sel.cats.forEach(function(cat,i){var cnt=0;sel.items.forEach(function(it){if((it[cat.name]||'').trim())cnt++;});var btn=document.createElement('button');btn.className='cat-btn'+(i===curCat?' active':'');btn.innerHTML='<span>'+cat.emoji+'</span><span style="flex:1;text-align:left">'+esc(cat.name)+'</span><span class="cpill">'+cnt+'</span><span class="cat-btn-actions"><button class="cat-action" title="重命名">✏</button>'+(i>0?'<button class="cat-action" title="上移">↑</button>':'')+(i<sel.cats.length-1?'<button class="cat-action" title="下移">↓</button>':'')+(i>=4?'<button class="cat-action danger" title="删除">✕</button>':'')+'</span>';(function(idx){btn.addEventListener('click',function(e){if(e.target.closest('.cat-btn-actions'))return;switchCat(idx);});var actions=btn.querySelectorAll('.cat-action');var ai=0;actions[ai++].addEventListener('click',function(e){e.stopPropagation();renameCat(idx);});if(i>0)actions[ai++].addEventListener('click',function(e){e.stopPropagation();moveCat(idx,-1);});if(i<sel.cats.length-1)actions[ai++].addEventListener('click',function(e){e.stopPropagation();moveCat(idx,1);});if(i>=4)actions[ai++].addEventListener('click',function(e){e.stopPropagation();deleteCat(idx);});})(i);list.appendChild(btn);});}
 function switchCat(idx){curCat=idx;renderSidebar();renderSel();}
+function showAddCatForm(){openMini('新增分类','<div style="display:flex;flex-direction:column;gap:10px;"><div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">分类名称</label><input id="miniCatName" class="fi" placeholder="如：售后与支持"></div><div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">图标 Emoji</label><input id="miniCatEmoji" class="fi" placeholder="如 🔧 💼 📊" style="font-size:18px;"></div></div>',function(){var name=document.getElementById('miniCatName').value.trim();var emoji=document.getElementById('miniCatEmoji').value.trim()||'📌';if(!name){toast('请输入分类名称');return false;}if(sel.cats.some(function(c){return c.name===name;})){toast('分类名称已存在');return false;}var color=EXTRA_COLORS[(sel.cats.length-4)%EXTRA_COLORS.length];sel.cats.push({name:name,emoji:emoji,color:color});sel.items.forEach(function(it){it[name]='';});sel.sub_headers[name]='';visibleCols.push(name);buildColConfig();persist();curCat=sel.cats.length-1;renderSidebar();renderSel();renderTable();toast('已新增：'+name);return true;});setTimeout(function(){var el=document.getElementById('miniCatName');if(el)el.focus();},100);}
+function renameCat(idx){var cat=sel.cats[idx];openMini('重命名分类','<div style="display:flex;flex-direction:column;gap:10px;"><div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">新名称</label><input id="miniRename" class="fi" value="'+esc(cat.name)+'"></div><div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">图标</label><input id="miniEmoji" class="fi" value="'+esc(cat.emoji)+'" style="font-size:18px;"></div></div>',function(){var newName=document.getElementById('miniRename').value.trim();var newEmoji=document.getElementById('miniEmoji').value.trim()||cat.emoji;if(!newName){toast('名称不能为空');return false;}if(newName!==cat.name&&sel.cats.some(function(c){return c.name===newName;})){toast('名称已存在');return false;}var oldName=cat.name;sel.items.forEach(function(it){it[newName]=it[oldName]||'';if(newName!==oldName)delete it[oldName];});if(sel.sub_headers[oldName]!==undefined){sel.sub_headers[newName]=sel.sub_headers[oldName];if(newName!==oldName)delete sel.sub_headers[oldName];}var ci=visibleCols.indexOf(oldName);if(ci>=0)visibleCols[ci]=newName;if(colWidths[oldName]!==undefined){colWidths[newName]=colWidths[oldName];delete colWidths[oldName];}cat.name=newName;cat.emoji=newEmoji;buildColConfig();persist();renderSidebar();renderSel();renderTable();toast('已重命名');return true;});setTimeout(function(){var el=document.getElementById('miniRename');if(el){el.focus();el.select();}},100);}
+function moveCat(idx,dir){var ni=idx+dir;if(ni<0||ni>=sel.cats.length)return;var tmp=sel.cats[idx];sel.cats[idx]=sel.cats[ni];sel.cats[ni]=tmp;if(curCat===idx)curCat=ni;else if(curCat===ni)curCat=idx;persist();renderSidebar();renderSel();}
+function deleteCat(idx){if(idx<4){toast('默认分类不可删除');return;}var cat=sel.cats[idx];if(!confirm('删除分类「'+cat.name+'」？'))return;sel.items.forEach(function(it){delete it[cat.name];});delete sel.sub_headers[cat.name];var vi=visibleCols.indexOf(cat.name);if(vi>=0)visibleCols.splice(vi,1);sel.cats.splice(idx,1);if(curCat>=sel.cats.length)curCat=sel.cats.length-1;buildColConfig();persist();renderSidebar();renderSel();renderTable();toast('已删除');}
+function renderSel(){var q='';var srch=document.getElementById('selSrch');if(srch)q=srch.value.toLowerCase();var cat=sel.cats[curCat];if(!cat)return;var sub=sel.sub_headers[cat.name]||'';var items=sel.items.filter(function(it){return(it[cat.name]||'').trim()&&(!q||(it[cat.name]||'').toLowerCase().indexOf(q)>=0);});var subDisp=sub?esc(sub):'<em style="color:var(--txt3)">点击「编辑说明」添加说明…</em>';var content=document.getElementById('selContent');content.innerHTML='<div class="sel-c-hdr"><div class="sel-c-title" style="color:'+cat.color+'">'+cat.emoji+' '+esc(cat.name)+'</div><div class="sub-hdr-wrap"><div class="sub-hdr-text" id="subTxt">'+subDisp+'</div><textarea class="sub-hdr-edit fta" id="subEdit">'+esc(sub)+'</textarea><div class="sub-hdr-btns" id="subBtns"><button class="ibtn sv" id="subSaveBtn">💾 保存</button><button class="ibtn" id="subCancelBtn">取消</button></div><button class="ibtn" id="subEditBtn">✏ 编辑说明</button></div></div><div id="selList"></div><div class="add-row"><textarea id="newTxt" placeholder="输入新卖点内容…" rows="2"></textarea><button class="btn btn-prim" id="addItemBtn" style="align-self:flex-end">添加</button></div>';document.getElementById('subEditBtn').addEventListener('click',editSubHdr);document.getElementById('subSaveBtn').addEventListener('click',saveSubHdr);document.getElementById('subCancelBtn').addEventListener('click',renderSel);document.getElementById('addItemBtn').addEventListener('click',commitAdd);var list=document.getElementById('selList');if(items.length){items.forEach(function(it,li){list.appendChild(renderItem(it,q,cat.name,li+1));});}else{list.innerHTML='<div class="empty-sel">暂无内容，在下方输入框添加</div>';}}
+function renderItem(it,q,catName,li){var text=it[catName]||'';var disp=q?hlTxt(esc(text),q):esc(text);var sid=it._sid;var d=document.createElement('div');d.className='sel-item';d.id='si_'+sid;d.innerHTML='<div class="snum">'+li+'</div><div class="sbody"><div class="stext" id="st_'+sid+'">'+disp+'</div><textarea class="sedit" id="se_'+sid+'"></textarea><div class="sactions"><button class="ibtn cp">📋 复制</button><button class="ibtn" id="eb_'+sid+'">✏ 编辑</button><button class="ibtn sv" id="sb_'+sid+'" style="display:none">💾 保存</button><button class="ibtn" id="cb_'+sid+'" style="display:none">取消</button><button class="ibtn dl">删除</button></div></div>';d.querySelector('.ibtn.cp').addEventListener('click',function(){copyItem(sid);});d.querySelector('#eb_'+sid).addEventListener('click',function(){startEdit(sid);});d.querySelector('#sb_'+sid).addEventListener('click',function(){saveItem(sid);});d.querySelector('#cb_'+sid).addEventListener('click',function(){cancelEdit(sid);});d.querySelector('.ibtn.dl').addEventListener('click',function(){delItem(sid);});return d;}
+function startEdit(sid){var it=null;sel.items.forEach(function(x){if(x._sid===sid)it=x;});if(!it)return;document.getElementById('st_'+sid).style.display='none';var se=document.getElementById('se_'+sid);se.value=it[sel.cats[curCat].name]||'';se.style.display='block';se.focus();document.getElementById('eb_'+sid).style.display='none';document.getElementById('sb_'+sid).style.display='';document.getElementById('cb_'+sid).style.display='';}
+function cancelEdit(sid){document.getElementById('st_'+sid).style.display='';document.getElementById('se_'+sid).style.display='none';document.getElementById('eb_'+sid).style.display='';document.getElementById('sb_'+sid).style.display='none';document.getElementById('cb_'+sid).style.display='none';}
+function saveItem(sid){var se=document.getElementById('se_'+sid);var it=null;sel.items.forEach(function(x){if(x._sid===sid)it=x;});if(it){it[sel.cats[curCat].name]=se.value;persist();renderSidebar();renderSel();toast('已保存');}}
+function delItem(sid){if(!confirm('删除该卖点？'))return;var catName=sel.cats[curCat].name;var it=null;sel.items.forEach(function(x){if(x._sid===sid)it=x;});if(it){it[catName]='';var ae=true;sel.cats.forEach(function(c){if((it[c.name]||'').trim())ae=false;});if(ae)sel.items=sel.items.filter(function(x){return x._sid!==sid;});}persist();renderSidebar();renderSel();toast('已删除');}
+function copyItem(sid){var it=null;sel.items.forEach(function(x){if(x._sid===sid)it=x;});if(it)navigator.clipboard.writeText(it[sel.cats[curCat].name]||'').then(function(){toast('已复制');});}
+function commitAdd(){var inp=document.getElementById('newTxt');if(!inp)return;var val=inp.value.trim();if(!val)return;var sid='s'+Date.now();var ni={_sid:sid,'序号':''};sel.cats.forEach(function(c){ni[c.name]='';});ni[sel.cats[curCat].name]=val;sel.items.push(ni);persist();renderSidebar();renderSel();toast('已添加');}
+function editSubHdr(){document.getElementById('subTxt').style.display='none';document.getElementById('subEdit').style.display='block';document.getElementById('subBtns').style.display='flex';document.getElementById('subEditBtn').style.display='none';document.getElementById('subEdit').focus();}
+function saveSubHdr(){sel.sub_headers[sel.cats[curCat].name]=document.getElementById('subEdit').value.trim();persist();renderSel();toast('已保存');}
+function hlTxt(text,q){if(!q)return text;try{return text.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),function(m){return '<span class="hl">'+m+'</span>';});}catch(e){return text;}}
 
-function showAddCatForm(){
-  openMini('新增分类',
-    '<div style="display:flex;flex-direction:column;gap:10px;">'
-    +'<div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">分类名称</label>'
-    +'<input id="miniCatName" class="fi" placeholder="如：售后与支持"></div>'
-    +'<div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">图标 Emoji</label>'
-    +'<input id="miniCatEmoji" class="fi" placeholder="如 🔧 💼 📊" style="font-size:18px;"></div>'
-    +'</div>',
-    function(){
-      var name=document.getElementById('miniCatName').value.trim();
-      var emoji=document.getElementById('miniCatEmoji').value.trim()||'📌';
-      if(!name){toast('请输入分类名称');return false;}
-      if(sel.cats.some(function(c){return c.name===name;})){toast('分类名称已存在');return false;}
-      var color=EXTRA_COLORS[(sel.cats.length-4)%EXTRA_COLORS.length];
-      sel.cats.push({name:name,emoji:emoji,color:color});
-      sel.items.forEach(function(it){it[name]='';});
-      sel.sub_headers[name]='';
-      // Add to visible cols & col defs
-      visibleCols.push(name);
-      buildColConfig();
-      persist();
-      curCat=sel.cats.length-1;
-      renderSidebar(); renderSel(); renderTable();
-      toast('已新增：'+name);
-      return true;
-    }
-  );
-  setTimeout(function(){var el=document.getElementById('miniCatName');if(el) el.focus();},100);
-}
-
-function renameCat(idx){
-  var cat=sel.cats[idx];
-  openMini('重命名分类',
-    '<div style="display:flex;flex-direction:column;gap:10px;">'
-    +'<div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">新名称</label>'
-    +'<input id="miniRename" class="fi" value="'+esc(cat.name)+'"></div>'
-    +'<div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">图标 Emoji</label>'
-    +'<input id="miniEmoji" class="fi" value="'+esc(cat.emoji)+'" style="font-size:18px;"></div>'
-    +'</div>',
-    function(){
-      var newName=document.getElementById('miniRename').value.trim();
-      var newEmoji=document.getElementById('miniEmoji').value.trim()||cat.emoji;
-      if(!newName){toast('名称不能为空');return false;}
-      if(newName!==cat.name && sel.cats.some(function(c){return c.name===newName;})){toast('名称已存在');return false;}
-      var oldName=cat.name;
-      // Rename in items & sub_headers
-      sel.items.forEach(function(it){it[newName]=it[oldName]||'';if(newName!==oldName) delete it[oldName];});
-      if(sel.sub_headers[oldName]!==undefined){sel.sub_headers[newName]=sel.sub_headers[oldName];if(newName!==oldName) delete sel.sub_headers[oldName];}
-      // Rename in visibleCols
-      var ci=visibleCols.indexOf(oldName);
-      if(ci>=0) visibleCols[ci]=newName;
-      // Update colWidths
-      if(colWidths[oldName]!==undefined){colWidths[newName]=colWidths[oldName];delete colWidths[oldName];}
-      cat.name=newName; cat.emoji=newEmoji;
-      buildColConfig(); persist();
-      renderSidebar(); renderSel(); renderTable();
-      toast('已重命名');
-      return true;
-    }
-  );
-  setTimeout(function(){var el=document.getElementById('miniRename');if(el){el.focus();el.select();}},100);
-}
-
-function moveCat(idx,dir){
-  var newIdx=idx+dir;
-  if(newIdx<0||newIdx>=sel.cats.length) return;
-  var tmp=sel.cats[idx]; sel.cats[idx]=sel.cats[newIdx]; sel.cats[newIdx]=tmp;
-  if(curCat===idx) curCat=newIdx;
-  else if(curCat===newIdx) curCat=idx;
-  persist(); renderSidebar(); renderSel();
-}
-
-function deleteCat(idx){
-  if(idx<4){toast('默认分类不可删除');return;}
-  var cat=sel.cats[idx];
-  if(!confirm('删除分类「'+cat.name+'」？该分类下所有内容也会删除。')) return;
-  sel.items.forEach(function(it){delete it[cat.name];});
-  delete sel.sub_headers[cat.name];
-  var vi=visibleCols.indexOf(cat.name);
-  if(vi>=0) visibleCols.splice(vi,1);
-  sel.cats.splice(idx,1);
-  if(curCat>=sel.cats.length) curCat=sel.cats.length-1;
-  buildColConfig(); persist();
-  renderSidebar(); renderSel(); renderTable();
-  toast('已删除');
-}
-
-function renderSel(){
-  var q=''; var srch=document.getElementById('selSrch'); if(srch) q=srch.value.toLowerCase();
-  var cat=sel.cats[curCat]; if(!cat) return;
-  var sub=sel.sub_headers[cat.name]||'';
-  var items=sel.items.filter(function(it){
-    return(it[cat.name]||'').trim()&&(!q||(it[cat.name]||'').toLowerCase().indexOf(q)>=0);
-  });
-  var subDisp=sub?esc(sub):'<em style="color:var(--txt3)">点击「编辑说明」添加说明…</em>';
-  var content=document.getElementById('selContent');
-  content.innerHTML='<div class="sel-c-hdr">'
-    +'<div class="sel-c-title" style="color:'+cat.color+'">'+cat.emoji+' '+esc(cat.name)+'</div>'
-    +'<div class="sub-hdr-wrap">'
-    +'<div class="sub-hdr-text" id="subTxt">'+subDisp+'</div>'
-    +'<textarea class="sub-hdr-edit fta" id="subEdit">'+esc(sub)+'</textarea>'
-    +'<div class="sub-hdr-btns" id="subBtns">'
-    +'<button class="ibtn sv" id="subSaveBtn">💾 保存</button>'
-    +'<button class="ibtn" id="subCancelBtn">取消</button>'
-    +'</div>'
-    +'<button class="ibtn" id="subEditBtn">✏ 编辑说明</button>'
-    +'</div></div>'
-    +'<div id="selList"></div>'
-    +'<div class="add-row"><textarea id="newTxt" placeholder="输入新卖点内容…" rows="2"></textarea>'
-    +'<button class="btn btn-prim" id="addItemBtn" style="align-self:flex-end">添加</button></div>';
-
-  // Events for sub-header
-  document.getElementById('subEditBtn').addEventListener('click',editSubHdr);
-  document.getElementById('subSaveBtn').addEventListener('click',saveSubHdr);
-  document.getElementById('subCancelBtn').addEventListener('click',renderSel);
-  document.getElementById('addItemBtn').addEventListener('click',commitAdd);
-
-  var list=document.getElementById('selList');
-  if(items.length){
-    items.forEach(function(it,localIdx){list.appendChild(renderItem(it,q,cat.name,localIdx+1));});
-  } else {
-    list.innerHTML='<div class="empty-sel">暂无内容，在下方输入框添加</div>';
-  }
-}
-
-function renderItem(it,q,catName,localIdx){
-  var text=it[catName]||'';
-  var disp=q?hlTxt(esc(text),q):esc(text);
-  var sid=it._sid;
-  var d=document.createElement('div');
-  d.className='sel-item'; d.id='si_'+sid;
-  d.innerHTML='<div class="snum">'+localIdx+'</div>'
-    +'<div class="sbody">'
-    +'<div class="stext" id="st_'+sid+'">'+disp+'</div>'
-    +'<textarea class="sedit" id="se_'+sid+'"></textarea>'
-    +'<div class="sactions">'
-    +'<button class="ibtn cp">📋 复制</button>'
-    +'<button class="ibtn" id="eb_'+sid+'">✏ 编辑</button>'
-    +'<button class="ibtn sv" id="sb_'+sid+'" style="display:none">💾 保存</button>'
-    +'<button class="ibtn" id="cb_'+sid+'" style="display:none">取消</button>'
-    +'<button class="ibtn dl">删除</button>'
-    +'</div></div>';
-  d.querySelector('.ibtn.cp').addEventListener('click',function(){copyItem(sid);});
-  d.querySelector('#eb_'+sid).addEventListener('click',function(){startEdit(sid);});
-  d.querySelector('#sb_'+sid).addEventListener('click',function(){saveItem(sid);});
-  d.querySelector('#cb_'+sid).addEventListener('click',function(){cancelEdit(sid);});
-  d.querySelector('.ibtn.dl').addEventListener('click',function(){delItem(sid);});
-  return d;
-}
-
-function startEdit(sid){
-  var it=null; sel.items.forEach(function(x){if(x._sid===sid) it=x;});
-  if(!it) return;
-  document.getElementById('st_'+sid).style.display='none';
-  var se=document.getElementById('se_'+sid); se.value=it[sel.cats[curCat].name]||''; se.style.display='block'; se.focus();
-  document.getElementById('eb_'+sid).style.display='none';
-  document.getElementById('sb_'+sid).style.display='';
-  document.getElementById('cb_'+sid).style.display='';
-}
-function cancelEdit(sid){
-  document.getElementById('st_'+sid).style.display='';
-  document.getElementById('se_'+sid).style.display='none';
-  document.getElementById('eb_'+sid).style.display='';
-  document.getElementById('sb_'+sid).style.display='none';
-  document.getElementById('cb_'+sid).style.display='none';
-}
-function saveItem(sid){
-  var se=document.getElementById('se_'+sid);
-  var it=null; sel.items.forEach(function(x){if(x._sid===sid) it=x;});
-  if(it){it[sel.cats[curCat].name]=se.value; persist(); renderSidebar(); renderSel(); toast('已保存');}
-}
-function delItem(sid){
-  if(!confirm('删除该卖点？')) return;
-  var catName=sel.cats[curCat].name;
-  var it=null; sel.items.forEach(function(x){if(x._sid===sid) it=x;});
-  if(it){
-    it[catName]='';
-    var allEmpty=true; sel.cats.forEach(function(c){if((it[c.name]||'').trim()) allEmpty=false;});
-    if(allEmpty) sel.items=sel.items.filter(function(x){return x._sid!==sid;});
-  }
-  persist(); renderSidebar(); renderSel(); toast('已删除');
-}
-function copyItem(sid){
-  var it=null; sel.items.forEach(function(x){if(x._sid===sid) it=x;});
-  if(it) navigator.clipboard.writeText(it[sel.cats[curCat].name]||'').then(function(){toast('已复制');});
-}
-function commitAdd(){
-  var inp=document.getElementById('newTxt'); if(!inp) return;
-  var val=inp.value.trim(); if(!val) return;
-  var sid='s'+Date.now();
-  var newIt={_sid:sid,'序号':''};
-  sel.cats.forEach(function(c){newIt[c.name]='';});
-  newIt[sel.cats[curCat].name]=val;
-  sel.items.push(newIt);
-  persist(); renderSidebar(); renderSel(); toast('已添加');
-}
-
-function editSubHdr(){
-  document.getElementById('subTxt').style.display='none';
-  document.getElementById('subEdit').style.display='block';
-  document.getElementById('subBtns').style.display='flex';
-  document.getElementById('subEditBtn').style.display='none';
-  document.getElementById('subEdit').focus();
-}
-function saveSubHdr(){
-  sel.sub_headers[sel.cats[curCat].name]=document.getElementById('subEdit').value.trim();
-  persist(); renderSel(); toast('已保存');
-}
-
-function hlTxt(text,q){
-  if(!q) return text;
-  try{return text.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),function(m){return '<span class="hl">'+m+'</span>';});}
-  catch(e){return text;}
-}
-
-// ─── REF DRAWER ──────────────────────────────────────────────────────────────
-function openRef(catIdx,fieldId){
-  refFieldId=fieldId;
-  var cat=sel.cats[catIdx]; if(!cat) return;
-  document.getElementById('refTitle').textContent=cat.emoji+' '+cat.name+' 卖点库';
-  var items=sel.items.filter(function(it){return(it[cat.name]||'').trim();});
-  var body=document.getElementById('refBody'); body.innerHTML='';
-  if(items.length){
-    items.forEach(function(it,i){
-      var row=document.createElement('div'); row.className='ref-row';
-      row.innerHTML='<div class="ref-rnum">'+(i+1)+'</div><div><div class="ref-rtext">'+esc(it[cat.name]||'')+'</div><div class="ref-hint">↩ 点击追加</div></div>';
-      (function(cn,sid){row.addEventListener('click',function(){insertRef(cn,sid);});})(cat.name,it._sid);
-      body.appendChild(row);
-    });
-  } else {
-    body.innerHTML='<div class="ref-empty">该维度暂无卖点，请先在素材库添加</div>';
-  }
-  document.getElementById('refDrawer').classList.add('open');
-}
-function insertRef(catName,sid){
-  var it=null; sel.items.forEach(function(x){if(x._sid===sid) it=x;});
-  if(!it||!refFieldId) return;
-  var field=document.getElementById(refFieldId); if(!field) return;
-  var cur=field.value.trim();
-  field.value=cur?cur+'\n\n'+it[catName]:it[catName];
-  field.focus(); closeRef(); toast('已追加到字段');
-}
+/* ── REF DRAWER ─────────────────────────────────────────────────────── */
+function openRef(catIdx,fieldId){refFieldId=fieldId;var cat=sel.cats[catIdx];if(!cat)return;document.getElementById('refTitle').textContent=cat.emoji+' '+cat.name+' 卖点库';var items=sel.items.filter(function(it){return(it[cat.name]||'').trim();});var body=document.getElementById('refBody');body.innerHTML='';if(items.length){items.forEach(function(it,i){var row=document.createElement('div');row.className='ref-row';row.innerHTML='<div class="ref-rnum">'+(i+1)+'</div><div><div class="ref-rtext">'+esc(it[cat.name]||'')+'</div><div class="ref-hint">↩ 点击追加</div></div>';(function(cn,sid){row.addEventListener('click',function(){insertRef(cn,sid);});})(cat.name,it._sid);body.appendChild(row);});}else{body.innerHTML='<div class="ref-empty">该维度暂无卖点，请先在素材库添加</div>';}document.getElementById('refDrawer').classList.add('open');}
+function insertRef(catName,sid){var it=null;sel.items.forEach(function(x){if(x._sid===sid)it=x;});if(!it||!refFieldId)return;var field=document.getElementById(refFieldId);if(!field)return;var cur=field.value.trim();field.value=cur?cur+'\n\n'+it[catName]:it[catName];field.focus();closeRef();toast('已追加到字段');}
 function closeRef(){document.getElementById('refDrawer').classList.remove('open');}
 
-// ─── MINI MODAL ───────────────────────────────────────────────────────────────
+/* ── MINI MODAL ─────────────────────────────────────────────────────── */
 var miniOkCb=null;
-function openMini(title,bodyHtml,onOk){
-  miniOkCb=onOk;
-  document.getElementById('miniTitle').textContent=title;
-  document.getElementById('miniBody').innerHTML=bodyHtml;
-  document.getElementById('miniOk').onclick=function(){if(miniOkCb&&miniOkCb()!==false) closeMini();};
-  document.getElementById('miniOv').classList.add('open');
-}
+function openMini(title,bodyHtml,onOk){miniOkCb=onOk;document.getElementById('miniTitle').textContent=title;document.getElementById('miniBody').innerHTML=bodyHtml;document.getElementById('miniOk').onclick=function(){if(miniOkCb&&miniOkCb()!==false)closeMini();};document.getElementById('miniOv').classList.add('open');}
 function closeMini(){document.getElementById('miniOv').classList.remove('open');}
+function switchTab(id,el){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active');});el.classList.add('active');document.getElementById(id).classList.add('active');}
 
-// ─── TABS ─────────────────────────────────────────────────────────────────────
-function switchTab(id,el){
-  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
-  document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active');});
-  el.classList.add('active'); document.getElementById(id).classList.add('active');
-}
-
-// ─── EXPORT ───────────────────────────────────────────────────────────────────
-function exportExcel(){
-  var wb=XLSX.utils.book_new();
-  var h1=['编号','日期','产品类型','型号','料号','料号描述','计算与系统性能能力','工业稳定运行能力','工业环境适应能力','连接与扩展能力','模块构成','产品特点','产品介绍','行业痛点','销售亮点','应用场景'];
-  sel.cats.slice(4).forEach(function(c){h1.push(c.name);});
-  var r1=products.map(function(r){
-    var row=[r['编号'],r['时间'],r['产品类型'],r['型号'],r['料号'],r['料号描述'],r['计算与系统性能'],r['工业稳定运行'],r['工业环境适应'],r['连接与扩展'],r['模块构成'],r['产品特点'],r['产品介绍'],r['行业痛点'],r['销售亮点'],r['应用场景']];
-    sel.cats.slice(4).forEach(function(c){row.push(r[c.name]||'');});
-    return row;
-  });
-  var ws1=XLSX.utils.aoa_to_sheet([h1].concat(r1));
-  ws1['!cols']=h1.map(function(){ return {wch:30}; });
-  XLSX.utils.book_append_sheet(wb,ws1,'2026产品学习总结表');
-  var catNames=sel.cats.map(function(c){return c.name;});
-  var h2=['序号'].concat(catNames);
-  var sh=[''].concat(sel.cats.map(function(c){return sel.sub_headers[c.name]||'';}));
-  var r2=sel.items.map(function(it){return [''].concat(catNames.map(function(cn){return it[cn]||'';}));});
-  var ws2=XLSX.utils.aoa_to_sheet([h2,sh].concat(r2));
-  ws2['!cols']=[{wch:8}].concat(catNames.map(function(){return {wch:45};}));
-  XLSX.utils.book_append_sheet(wb,ws2,'SELECTION卖点库');
-  var ts=new Date().toISOString().slice(0,10).replace(/-/g,'');
-  XLSX.writeFile(wb,'产品学习系统-Everly-'+ts+'.xlsx');
-}
-
+/* ── EXPORT EXCEL ────────────────────────────────────────────────────── */
+function exportExcel(){var wb=XLSX.utils.book_new();var h1=['编号','日期','产品类型','型号','料号','料号描述','计算与系统性能能力','工业稳定运行能力','工业环境适应能力','连接与扩展能力','模块构成','产品特点','产品介绍','行业痛点','销售亮点','应用场景'];sel.cats.slice(4).forEach(function(c){h1.push(c.name);});var r1=products.map(function(r){var row=[r['编号'],r['时间'],r['产品类型'],r['型号'],r['料号'],r['料号描述'],r['计算与系统性能'],r['工业稳定运行'],r['工业环境适应'],r['连接与扩展'],r['模块构成'],r['产品特点'],r['产品介绍'],r['行业痛点'],r['销售亮点'],r['应用场景']];sel.cats.slice(4).forEach(function(c){row.push(r[c.name]||'');});return row;});var ws1=XLSX.utils.aoa_to_sheet([h1].concat(r1));ws1['!cols']=h1.map(function(){return{wch:30};});XLSX.utils.book_append_sheet(wb,ws1,'2026产品学习总结表');var catNames=sel.cats.map(function(c){return c.name;});var h2=['序号'].concat(catNames);var sh=[''].concat(sel.cats.map(function(c){return sel.sub_headers[c.name]||'';}));var r2=sel.items.map(function(it){return[''].concat(catNames.map(function(cn){return it[cn]||'';}));});var ws2=XLSX.utils.aoa_to_sheet([h2,sh].concat(r2));ws2['!cols']=[{wch:8}].concat(catNames.map(function(){return{wch:45};}));XLSX.utils.book_append_sheet(wb,ws2,'SELECTION卖点库');var ts=new Date().toISOString().slice(0,10).replace(/-/g,'');XLSX.writeFile(wb,'产品学习系统-Everly-'+ts+'.xlsx');}
 </script>
 </body>
 </html>
