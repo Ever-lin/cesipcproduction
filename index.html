@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>产品学习系统 · Everly</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root {
+  --bg:#0f1117; --sur:#181c27; --sur2:#1e2436; --sur3:#252b3d;
+  --bdr:#2d3554; --bdr2:#3a4260;
+  --acc:#5b8dee; --acc2:#43d9a0; --acc3:#f0a84a; --acc4:#c678dd;
+  --red:#e06c75; --txt:#d4daf5; --txt2:#8892b8; --txt3:#515d8a;
+  --shadow:0 8px 32px rgba(0,0,0,0.4);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;font-size:14px;line-height:1.6;}
+
+/* ── HEADER ── */
+.hdr{background:var(--sur);border-bottom:1px solid var(--bdr);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:300;gap:12px;}
+.hdr-brand{display:flex;align-items:center;gap:12px;}
+.logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#5b8dee,#c678dd);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0;}
+.hdr-title{font-size:15px;font-weight:700;letter-spacing:.3px;}
+.hdr-sub{font-size:11.5px;color:var(--txt3);margin-top:1px;}
+.hdr-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{padding:7px 14px;border-radius:7px;border:1px solid var(--bdr);font-size:12.5px;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .2s;font-weight:500;white-space:nowrap;}
+.btn-prim{background:var(--acc);color:#fff;border-color:var(--acc);}
+.btn-prim:hover{background:#7aa3f5;}
+.btn-ok{background:rgba(67,217,160,.15);color:var(--acc2);border-color:rgba(67,217,160,.3);}
+.btn-ok:hover{background:rgba(67,217,160,.25);}
+.btn-ghost{background:transparent;color:var(--txt2);}
+.btn-ghost:hover{background:var(--sur2);color:var(--txt);}
+.btn-danger{background:rgba(224,108,117,.12);color:var(--red);border-color:rgba(224,108,117,.25);}
+.btn-danger:hover{background:rgba(224,108,117,.22);}
+.saved-flash{font-size:12px;color:var(--acc2);display:none;align-items:center;gap:4px;}
+.saved-flash.show{display:inline-flex;}
+
+/* ── TABS ── */
+.tabs-bar{background:var(--sur);border-bottom:1px solid var(--bdr);padding:0 24px;display:flex;gap:2px;}
+.tab{padding:11px 18px;font-size:13px;font-weight:500;color:var(--txt3);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.tab:hover{color:var(--txt2);}
+.tab.active{color:var(--acc);border-bottom-color:var(--acc);}
+
+/* ── MAIN LAYOUT ── */
+.main{padding:22px 24px;max-width:1700px;margin:0 auto;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* ── TOOLBAR ── */
+.toolbar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
+.search-wrap{position:relative;flex:1;min-width:180px;max-width:360px;}
+.search-wrap input{width:100%;background:var(--sur);border:1px solid var(--bdr);color:var(--txt);padding:8px 12px 8px 34px;border-radius:7px;font-size:13px;font-family:inherit;outline:none;transition:border-color .2s;}
+.search-wrap input:focus{border-color:var(--acc);}
+.search-wrap .si{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--txt3);font-size:15px;}
+.fsel{background:var(--sur);border:1px solid var(--bdr);color:var(--txt);padding:8px 12px;border-radius:7px;font-size:12.5px;font-family:inherit;cursor:pointer;outline:none;}
+.fsel:focus{border-color:var(--acc);}
+.cnt{font-size:12px;color:var(--txt3);padding:8px 4px;}
+
+/* ── STATS ── */
+.stats{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+.stat{background:var(--sur);border:1px solid var(--bdr);border-radius:9px;padding:12px 18px;}
+.stat-lbl{font-size:10.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.6px;font-weight:600;}
+.stat-val{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;margin-top:2px;}
+
+/* ── PRODUCT TABLE ── */
+.tbl-wrap{background:var(--sur);border:1px solid var(--bdr);border-radius:11px;overflow:hidden;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:900px;}
+thead th{background:var(--sur2);padding:10px 13px;text-align:left;font-weight:600;font-size:11px;color:var(--txt3);letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--bdr);white-space:nowrap;cursor:pointer;user-select:none;}
+thead th:hover{color:var(--txt2);}
+thead th.sa::after{content:' ▲';font-size:9px;}
+thead th.sd::after{content:' ▼';font-size:9px;}
+/* Table group headers */
+thead .th-group{background:var(--sur3);font-size:10px;text-align:center;color:var(--txt3);padding:5px 8px;border-bottom:1px solid var(--bdr);letter-spacing:.4px;}
+thead .th-group.g-acc{color:var(--acc);background:rgba(91,141,238,.06);}
+thead .th-group.g-grn{color:var(--acc2);background:rgba(67,217,160,.06);}
+thead .th-group.g-gld{color:var(--acc3);background:rgba(240,168,74,.06);}
+thead .th-group.g-pur{color:var(--acc4);background:rgba(198,120,221,.06);}
+tbody tr{border-bottom:1px solid var(--bdr);transition:background .15s;cursor:pointer;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--sur2);}
+tbody td{padding:10px 13px;vertical-align:top;}
+.no-data{text-align:center;padding:48px;color:var(--txt3);}
+
+/* ── CAPABILITY CELLS ── */
+.cap-cell{max-width:220px;}
+.cap-snippet{font-size:11.5px;color:var(--txt2);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.cap-snippet.empty{color:var(--txt3);font-style:italic;}
+.cap-tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:1px 7px;border-radius:10px;margin-bottom:4px;font-weight:600;}
+
+/* ── TAGS ── */
+.tag{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
+.t-blu{background:rgba(91,141,238,.13);color:var(--acc);border:1px solid rgba(91,141,238,.22);}
+.t-grn{background:rgba(67,217,160,.12);color:var(--acc2);border:1px solid rgba(67,217,160,.22);}
+.t-gld{background:rgba(240,168,74,.12);color:var(--acc3);border:1px solid rgba(240,168,74,.22);}
+.t-pur{background:rgba(198,120,221,.12);color:var(--acc4);border:1px solid rgba(198,120,221,.22);}
+.t-org{background:rgba(255,160,60,.1);color:#ffa03c;border:1px solid rgba(255,160,60,.2);}
+
+/* ── DETAIL / EDIT MODAL ── */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:400;align-items:flex-start;justify-content:center;padding:28px 20px;backdrop-filter:blur(3px);overflow-y:auto;}
+.ov.open{display:flex;}
+.modal{background:var(--sur);border:1px solid var(--bdr);border-radius:14px;max-width:980px;width:100%;animation:mIn .2s ease;position:relative;}
+@keyframes mIn{from{opacity:0;transform:translateY(12px) scale(.98);}to{opacity:1;transform:none;}}
+.mhdr{padding:18px 22px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.mhdr-left{flex:1;min-width:0;}
+.mtitle{font-size:17px;font-weight:700;}
+.msub{font-size:12px;color:var(--txt3);margin-top:4px;font-family:'JetBrains Mono',monospace;}
+.mcls{background:none;border:none;color:var(--txt2);font-size:20px;cursor:pointer;padding:2px 6px;border-radius:5px;line-height:1;flex-shrink:0;}
+.mcls:hover{background:var(--sur2);color:var(--txt);}
+.mbody{padding:18px 22px 22px;max-height:80vh;overflow-y:auto;}
+
+/* ── FORM FIELDS ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group.full{grid-column:1/-1;}
+.flbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--txt3);display:flex;align-items:center;gap:6px;}
+.flbl .ref-btn{font-size:10px;padding:1px 7px;background:rgba(91,141,238,.12);color:var(--acc);border:1px solid rgba(91,141,238,.25);border-radius:4px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500;transition:all .2s;}
+.flbl .ref-btn:hover{background:rgba(91,141,238,.22);}
+.finput,.fta{background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:8px 11px;border-radius:7px;font-size:13px;font-family:inherit;outline:none;transition:border-color .2s;width:100%;}
+.finput:focus,.fta:focus{border-color:var(--acc);}
+.fta{resize:vertical;min-height:90px;line-height:1.65;}
+.fta.tall{min-height:140px;}
+.mfooter{display:flex;gap:9px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid var(--bdr);}
+
+/* ── CELL PREVIEW ── */
+.cell-prev{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;}
+.cell-mono{font-family:'JetBrains Mono',monospace;font-size:12px;}
+
+/* ── SELECTION PANEL ── */
+.sel-layout{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start;}
+@media(max-width:900px){.sel-layout{grid-template-columns:1fr;}}
+.sel-sidebar{background:var(--sur);border:1px solid var(--bdr);border-radius:11px;overflow:hidden;position:sticky;top:84px;}
+.sel-sidebar-hdr{padding:12px 16px;font-size:12px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--bdr);background:var(--sur2);}
+.sel-cat-btn{width:100%;padding:11px 16px;background:none;border:none;border-bottom:1px solid var(--bdr);cursor:pointer;text-align:left;font-family:inherit;font-size:13px;font-weight:500;color:var(--txt2);display:flex;align-items:center;gap:10px;transition:all .2s;}
+.sel-cat-btn:last-child{border-bottom:none;}
+.sel-cat-btn:hover{background:var(--sur2);color:var(--txt);}
+.sel-cat-btn.active{background:rgba(91,141,238,.1);color:var(--acc);}
+.sel-cat-btn .cnt-pill{margin-left:auto;font-size:10.5px;background:var(--sur2);color:var(--txt3);padding:1px 7px;border-radius:10px;}
+.sel-content{background:var(--sur);border:1px solid var(--bdr);border-radius:11px;overflow:hidden;}
+.sel-c-hdr{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.sel-c-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.sel-c-desc{font-size:11.5px;color:var(--txt3);margin-top:3px;}
+.sel-item-list{padding:0;}
+.sel-item{border-bottom:1px solid var(--bdr);padding:14px 18px;display:flex;gap:10px;align-items:flex-start;position:relative;transition:background .15s;}
+.sel-item:last-child{border-bottom:none;}
+.sel-item:hover{background:var(--sur2);}
+.sel-item-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--txt3);min-width:22px;padding-top:2px;font-weight:600;}
+.sel-item-body{flex:1;min-width:0;}
+.sel-item-text{font-size:13px;line-height:1.7;color:var(--txt2);white-space:pre-wrap;word-break:break-word;}
+.sel-item-text.editing{display:none;}
+.sel-item-edit{display:none;width:100%;}
+.sel-item-edit.editing{display:block;}
+.sel-item-actions{display:flex;gap:6px;margin-top:8px;}
+.item-btn{padding:3px 10px;font-size:11px;border-radius:5px;border:1px solid var(--bdr);background:transparent;cursor:pointer;font-family:inherit;color:var(--txt2);transition:all .15s;}
+.item-btn:hover{background:var(--sur3);color:var(--txt);}
+.item-btn.save{color:var(--acc2);border-color:rgba(67,217,160,.3);}
+.item-btn.save:hover{background:rgba(67,217,160,.1);}
+.item-btn.copy{color:var(--acc);border-color:rgba(91,141,238,.3);}
+.item-btn.copy:hover{background:rgba(91,141,238,.1);}
+.item-btn.use{color:var(--acc3);border-color:rgba(240,168,74,.3);}
+.item-btn.use:hover{background:rgba(240,168,74,.1);}
+.item-btn.del{color:var(--red);border-color:rgba(224,108,117,.25);}
+.item-btn.del:hover{background:rgba(224,108,117,.1);}
+.add-item-row{padding:12px 18px;border-top:1px solid var(--bdr);display:flex;gap:8px;}
+.add-item-input{flex:1;background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:7px 11px;border-radius:7px;font-size:13px;font-family:inherit;outline:none;}
+.add-item-input:focus{border-color:var(--acc);}
+
+/* ── REFERENCE DRAWER ── */
+.ref-drawer{position:fixed;inset:0;z-index:500;display:none;align-items:flex-end;justify-content:center;}
+.ref-drawer.open{display:flex;}
+.ref-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.6);z-index:0;}
+.ref-panel{position:relative;background:var(--sur);border:1px solid var(--bdr);border-radius:14px 14px 0 0;width:100%;max-width:820px;max-height:70vh;display:flex;flex-direction:column;animation:slideUp .22s ease;z-index:1;}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0;}to{transform:none;opacity:1;}}
+.ref-panel-hdr{padding:14px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;}
+.ref-panel-title{font-size:14px;font-weight:700;color:var(--acc);}
+.ref-panel-sub{font-size:12px;color:var(--txt3);margin-top:3px;}
+.ref-panel-cls{background:none;border:none;color:var(--txt2);font-size:20px;cursor:pointer;padding:2px 6px;border-radius:5px;}
+.ref-panel-cls:hover{background:var(--sur2);}
+.ref-panel-body{overflow-y:auto;flex:1;}
+.ref-section{border-bottom:1px solid var(--bdr);}
+.ref-section:last-child{border-bottom:none;}
+.ref-section-title{padding:10px 20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;background:var(--sur2);color:var(--txt3);}
+.ref-row{padding:11px 20px;border-bottom:1px solid rgba(45,53,84,.4);display:flex;gap:10px;align-items:flex-start;cursor:pointer;transition:background .15s;}
+.ref-row:last-child{border-bottom:none;}
+.ref-row:hover{background:var(--sur2);}
+.ref-row-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--txt3);min-width:20px;padding-top:2px;}
+.ref-row-text{font-size:12.5px;color:var(--txt2);line-height:1.65;flex:1;white-space:pre-wrap;word-break:break-word;}
+.ref-row:hover .ref-row-text{color:var(--txt);}
+.ref-use-hint{font-size:10px;color:var(--acc);margin-top:4px;opacity:0;}
+.ref-row:hover .ref-use-hint{opacity:1;}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--txt3);}
+
+/* ── MISC ── */
+.highlight{background:rgba(91,141,238,.22);border-radius:2px;padding:0 1px;}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.empty-sel{padding:28px;text-align:center;color:var(--txt3);font-size:13px;}
+.copy-toast{position:fixed;bottom:28px;right:28px;background:var(--acc2);color:#0f1117;padding:10px 18px;border-radius:9px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;}
+.copy-toast.show{opacity:1;}
+
+/* ── SALES CARD VIEW (Tab1 detail modal) ── */
+.sales-view{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.sales-block{background:var(--sur2);border:1px solid var(--bdr);border-radius:9px;padding:13px 15px;}
+.sales-block.full{grid-column:1/-1;}
+.sales-block-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.sales-block-body{font-size:12.5px;color:var(--txt2);line-height:1.75;white-space:pre-wrap;word-break:break-word;}
+.sales-block-body.empty{color:var(--txt3);font-style:italic;}
+
+</style>
+</head>
+<body>
+
+<!-- COPY TOAST -->
+<div class="copy-toast" id="copyToast">✓ 已复制到剪贴板</div>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-brand">
+    <div class="logo">E</div>
+    <div>
+      <div class="hdr-title">产品学习系统</div>
+      <div class="hdr-sub">Everly · 2026 工业电脑知识库 · 可编辑 · 支持导出</div>
+    </div>
+  </div>
+  <div class="hdr-actions">
+    <span class="saved-flash" id="savedFlash">✓ 已自动保存</span>
+    <button class="btn btn-ok" onclick="exportExcel()">⬇ 导出 Excel</button>
+    <button class="btn btn-prim" onclick="openAddModal()">＋ 新增产品</button>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-bar">
+  <div class="tab active" onclick="switchTab('t1',this)">📋 2026 产品总结表</div>
+  <div class="tab" onclick="switchTab('t2',this)">📌 SELECTION 卖点素材库</div>
+</div>
+
+<div class="main">
+
+<!-- ─── TAB 1: PRODUCT TABLE ─── -->
+<div class="tab-panel active" id="t1">
+  <div class="stats" id="statsBar"></div>
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <span class="si">🔍</span>
+      <input type="text" id="srch" placeholder="搜索型号、料号、描述、亮点…" oninput="doFilter()">
+    </div>
+    <select class="fsel" id="typeFilt" onchange="doFilter()">
+      <option value="">全部类型</option>
+    </select>
+    <span class="cnt" id="cntBadge"></span>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="doSort(0)" style="width:44px">#</th>
+          <th onclick="doSort(1)" style="width:82px">日期</th>
+          <th onclick="doSort(2)" style="width:110px">类型</th>
+          <th onclick="doSort(3)" style="width:130px">型号</th>
+          <th style="width:120px">料号</th>
+          <th style="width:220px">料号描述（规格）</th>
+          <th style="width:200px">⚡ 计算与系统性能</th>
+          <th style="width:200px">🏭 工业稳定运行</th>
+          <th style="width:200px">🛡 工业环境适应</th>
+          <th style="width:200px">🔗 连接与扩展</th>
+          <th style="width:140px">✨ 产品特点 / 场景</th>
+          <th style="width:80px" class="no-sort">操作</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ─── TAB 2: SELECTION ─── -->
+<div class="tab-panel" id="t2">
+  <div class="toolbar">
+    <div class="search-wrap" style="max-width:320px">
+      <span class="si">🔍</span>
+      <input type="text" id="selSrch" placeholder="搜索卖点内容…" oninput="filterSel()">
+    </div>
+    <button class="btn btn-ghost" onclick="addSelItem()">＋ 新增条目</button>
+    <span style="font-size:12px;color:var(--txt3);padding:8px 4px;">💡 点击条目可编辑 · 点击「引用」可插入到产品详情</span>
+  </div>
+
+  <div class="sel-layout">
+    <div class="sel-sidebar">
+      <div class="sel-sidebar-hdr">能力维度</div>
+      <div id="catSidebar"></div>
+      <div style="border-top:1px solid var(--bdr);padding:10px 12px;">
+        <button class="btn btn-ghost" style="width:100%;justify-content:center;font-size:12px;" onclick="promptAddCat()">＋ 新增自定义分类</button>
+      </div>
+    </div>
+    <div class="sel-content" id="selContent"></div>
+  </div>
+</div>
+
+</div><!-- .main -->
+
+<!-- ─── PRODUCT EDIT MODAL ─── -->
+<div class="ov" id="editOv" onclick="if(event.target===this)closeEdit()">
+<div class="modal" id="editModal">
+  <div class="mhdr">
+    <div class="mhdr-left">
+      <div class="mtitle" id="editTitle">产品详情</div>
+      <div class="msub" id="editSub"></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span id="editModeBadge" style="font-size:11px;padding:3px 9px;border-radius:5px;background:rgba(91,141,238,.15);color:var(--acc);font-weight:600;">编辑模式</span>
+      <button class="mcls" onclick="closeEdit()">✕</button>
+    </div>
+  </div>
+  <div class="mbody">
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="flbl">日期</label>
+        <input class="finput" id="f_date" type="date">
+      </div>
+      <div class="form-group">
+        <label class="flbl">产品类型</label>
+        <input class="finput" id="f_type" placeholder="EPC BOX PC / EPC PANEL PC / UTC / AI / WPC">
+      </div>
+      <div class="form-group">
+        <label class="flbl">型号</label>
+        <input class="finput" id="f_model" placeholder="如 EPC-309A">
+      </div>
+      <div class="form-group">
+        <label class="flbl">料号</label>
+        <input class="finput" id="f_pn" placeholder="如 C10.03.03.005">
+      </div>
+      <div class="form-group full">
+        <label class="flbl">料号描述</label>
+        <textarea class="fta" id="f_desc" placeholder="处理器、内存、硬盘、接口等完整规格描述…"></textarea>
+      </div>
+
+      <div class="form-group full">
+        <label class="flbl">
+          ⚡ 计算与系统性能
+          <span class="ref-btn" onclick="openRef('计算与系统性能','f_perf')">📋 引用卖点库</span>
+        </label>
+        <textarea class="fta tall" id="f_perf" placeholder="处理器型号与性能优势、内存品牌、硬盘方案、TPM安全模块…"></textarea>
+      </div>
+      <div class="form-group full">
+        <label class="flbl">
+          🏭 工业稳定运行
+          <span class="ref-btn" onclick="openRef('工业稳定运行','f_stab')">📋 引用卖点库</span>
+        </label>
+        <textarea class="fta tall" id="f_stab" placeholder="来电自启、看门狗、宽压输入、冗余电源…"></textarea>
+      </div>
+      <div class="form-group full">
+        <label class="flbl">
+          🛡 工业环境适应
+          <span class="ref-btn" onclick="openRef('工业环境适应','f_env')">📋 引用卖点库</span>
+        </label>
+        <textarea class="fta tall" id="f_env" placeholder="IP65防护、铝合金机身、无风扇散热、屏幕类型…"></textarea>
+      </div>
+      <div class="form-group full">
+        <label class="flbl">
+          🔗 连接与扩展
+          <span class="ref-btn" onclick="openRef('连接与扩展','f_conn')">📋 引用卖点库</span>
+        </label>
+        <textarea class="fta tall" id="f_conn" placeholder="网口、WiFi、4G、USB、RS232、M.2扩展…"></textarea>
+      </div>
+
+      <div class="form-group full">
+        <label class="flbl">🧩 模块构成</label>
+        <textarea class="fta" id="f_module" placeholder="内部模块板构成（智核板、智能板、智联板等）…"></textarea>
+      </div>
+      <div class="form-group full">
+        <label class="flbl">✨ 产品特点（一句话定位）</label>
+        <input class="finput" id="f_feat" placeholder="如：适用于纺织厂生产线的专用工业电脑">
+      </div>
+      <div class="form-group full">
+        <label class="flbl">💡 产品介绍（对客户说的话）</label>
+        <textarea class="fta tall" id="f_intro" placeholder="面向客户的产品简介，适合使用场景描述…"></textarea>
+      </div>
+      <div class="form-group full">
+        <label class="flbl">❗ 行业痛点</label>
+        <textarea class="fta" id="f_pain" placeholder="客户当前使用普通电脑遇到的问题…"></textarea>
+      </div>
+      <div class="form-group full">
+        <label class="flbl">🏆 销售亮点</label>
+        <textarea class="fta tall" id="f_high" placeholder="为什么选择我们？具体卖点列举…"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="flbl">🌍 应用场景</label>
+        <input class="finput" id="f_scene" placeholder="如：墨西哥食品工厂、巴基斯坦纺织厂">
+      </div>
+      <div class="form-group">
+        <label class="flbl">编号</label>
+        <input class="finput" id="f_num" type="text" placeholder="自动生成">
+      </div>
+    </div>
+
+    <div class="mfooter">
+      <button class="btn btn-danger" id="deleteBtn" onclick="deleteProduct()">删除产品</button>
+      <button class="btn btn-ghost" onclick="closeEdit()">取消</button>
+      <button class="btn btn-prim" onclick="saveProduct()">💾 保存</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ─── REFERENCE DRAWER ─── -->
+<div class="ref-drawer" id="refDrawer">
+  <div class="ref-backdrop" onclick="closeRef()"></div>
+  <div class="ref-panel" onclick="event.stopPropagation()">
+    <div class="ref-panel-hdr">
+      <div>
+        <div class="ref-panel-title" id="refTitle">卖点参考库</div>
+        <div class="ref-panel-sub">点击任意条目 → 追加到当前字段</div>
+      </div>
+      <button class="ref-panel-cls" onclick="closeRef()">✕</button>
+    </div>
+    <div class="ref-panel-body" id="refBody"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  DATA STORE
+// ═══════════════════════════════════════════════════════
+const INITIAL = {"sheet1": [{"编号": "1", "时间": "2026-03-06", "产品类型": "EPC BOX PC", "型号": "EPC-309A", "料号": "C10.03.03.005", "料号描述": "CES-1902;I7-10510U;16G;SSD:512G;无线WIFI,无线蓝牙;宽压输入-USB3.0x4;USB2.0x2;RJ45x2;AUDIOx1;RS232x4;RS485x2;HDMIx1;VGAx1 其他功能:来电自启", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 支持宽压 9-36V DC 电源输入，适应复杂工业供电环境\n3. 3Pin 凤凰端子设计：配备 3Pin 凤凰端子，支持标准工业接线，安装和维护简便。", "工业环境适应": "1. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n2. 散热设计：无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。\n3. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性", "连接与扩展": "1. 双 Intel® I210 千兆以太网接口：配备 双 Intel® I210 千兆以太网接口，提供工业级网络高速稳定传输，支持冗余与链路聚合，适合自动化控制、工业通信和数据采集场景。\n2. WiFi 和蓝牙：支持 WiFi 和蓝牙 无线通信，实现本地无线连接，方便工业现场设备互联和数据传输。\n3. 丰富 I/O 接口：配备 4x USB 3.0、2x USB 2.0、4x RS232、2x RS485、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。\n4. 1x M.2 Key 2280 NVMe SSD 插槽，1x Mini PCle Wi-Fi 模组扩展", "模块构成": "CES-1902：HDMI+4*USB3.0+2*LAN+Audio+RAM+mSATA SSD+BT\nEXB-D2211：VGA+COM1（RS232）+M.2 SSD\nCOB-D2171：3Pin 凤凰端子+宽压模块\nCOB-D2212：COM2-6（COM2和3 可以改RS485）+2*USB2.0+按键开关", "产品特点": "", "产品介绍": "", "行业痛点": "", "销售亮点": "", "应用场景": ""}, {"编号": "2", "时间": "2026-03-06", "产品类型": "EPC PANEL PC", "型号": "EPC-S1022A", "料号": "C11.01.04.023", "料号描述": "9.7 inch;1024*768;默认;电容触摸;CES-1201;I5-1235U;16G;SSD:512G;WIFI;宽压输入-USB3.0x4,USB2.0x2;;RJ45x2;AUDIOx1;RS232x2;RS485x1;HDMIx1,VGAx1;其他功能:-", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 支持宽压 9-36V DC 电源输入，适应复杂工业供电环境\n3. 3Pin 凤凰端子设计：配备 3Pin 凤凰端子，支持标准工业接线，安装和维护简便。", "工业环境适应": "1. 电容屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 纯平面 10 点电容式触摸屏，多点触控，操作流畅，适合精细操作。\n2. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n3. 散热设计：无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。\n4. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性\n5. 10 英寸 4:3 TFT LCD，分辨率 1024x768 (XGA)", "连接与扩展": "1. 双 Intel® I210 千兆以太网接口：配备 双 Intel® I210 千兆以太网接口，提供工业级网络高速稳定传输，支持冗余与链路聚合，适合自动化控制、工业通信和数据采集场景。\n2. 丰富 I/O 接口：配备 4x USB 3.0、2x USB 2.0、2x RS232、1x RS485、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。\n3. 2x M.2 Key 2280 NVMe SSD 插槽，1x Mini PCle Wi-Fi 模组扩展", "模块构成": "", "产品特点": "", "产品介绍": "", "行业痛点": "", "销售亮点": "", "应用场景": ""}, {"编号": "4", "时间": "2026-03-07", "产品类型": "EPC PANEL PC", "型号": "EPC-W1322T", "料号": "C11.01.04.018", "料号描述": "13.3inch;1920*1080;默认;电容触摸;CES-1201;i7-1255U;16G;SSD:256G;无线Wi-Fi,无;宽压输入-USB3.0x4;RJ45x2;AUDIOx1,MICx1;RS232x3;HDMIx1,VGAx1;其他功能:TP电容触摸开关;前框黑色(原型号：EPC-W1322B)", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 支持宽压 9-36V DC 电源输入，适应复杂工业供电环境\n3. 3Pin 凤凰端子设计：配备 3Pin 凤凰端子，支持标准工业接线，安装和维护简便。\n4. 电源开关与状态指示：电源开关与状态指示可延伸至机柜前面板，便于集中管理与维护。", "工业环境适应": "1. 电容屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 纯平面 10 点电容式触摸屏，多点触控，操作流畅，适合精细操作。\n2. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n3. 散热设计：无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。 \n4. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性\n5. 13.3 英寸 16:9 TFT LCD，分辨率 1920x1080 (FHD)", "连接与扩展": "1. 双 Intel® I210 千兆以太网接口：配备 双 Intel® I210 千兆以太网接口，提供工业级网络高速稳定传输，支持冗余与链路聚合，适合自动化控制、工业通信和数据采集场景。\n2. WiFi 和蓝牙：支持 WiFi 和蓝牙 无线通信，实现本地无线连接，方便工业现场设备互联和数据传输。\n3. 丰富 I/O 接口：配备 4x USB 3.0、2x USB 2.0、6x RS232（可选 RS485/RS422）、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。\n4. 2x M.2 Key 2280 NVMe SSD 插槽，1x Mini PCle Wi-Fi 模组扩展。", "模块构成": "CES-1201：HDMI+4*USB3.0+2*LAN+Audio+RAM+M.2 SSD+BT\nEXB-D2351：VGA+3Pin 凤凰端子+M.2 SSD\nCOB-D21C6：COM 1-3（COM2+3 可以改RS485）+2*USB2.0+按键开关", "产品特点": "", "产品介绍": "", "行业痛点": "", "销售亮点": "", "应用场景": ""}, {"编号": "5", "时间": "2026-03-07", "产品类型": "AI", "型号": "EPC-W12-N500", "料号": "C11.01.06.001", "料号描述": "12.5 inch;1920*1080;默认;电容触摸;Orin NX 16G;SSD:256G;WIFI,宽压输入-USB2.0x2,USB3.0x2;RJ45x4(POE);AUDIOx1;RS485x2;其他功能:4G全网通,", "计算与系统性能": "1. NVIDIA Jetson Orin™ NX 16GB：搭载 NVIDIA Jetson Orin™ NX 16GB AI 模组，提供 最高 70 TOPS 边缘 AI 推理算力，集成 8 核 ARM CPU 与 1024 核 Ampere GPU，适合工业边缘 AI、机器视觉及智能控制应用，兼顾高性能与低功耗。\n2. 我们的机器硬盘采用金士顿，是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 支持宽压 9-36V DC 电源输入，适应复杂工业供电环境\n3. 3Pin 凤凰端子设计：配备 3Pin 凤凰端子，支持标准工业接线，安装和维护简便。", "工业环境适应": "1. 电容屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 纯平面 10 点电容式触摸屏，多点触控，操作流畅，适合精细操作。\n2. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n3. CESIPC 智能温控技术，通过硬件架构优化与算法调控，实现高效散热、性能释放与系统长期稳定运行，适合工业现场长期使用。\n4. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性\n5. 12.5 英寸 16:9 TFT LCD，分辨率 1920x1080 (FHD)", "连接与扩展": "1. 四口 Intel® I210 千兆以太网接口（支持 PoE）：配备 四个 Intel® I210 千兆以太网接口，支持 PoE 功能，提供工业级高速稳定网络传输，支持冗余与链路聚合，适合工业自动化控制、工业通信和数据采集场景。\n2. WiFi 和蓝牙：支持 WiFi 和蓝牙 无线通信，实现本地无线连接，方便工业现场设备互联和数据传输。\n3. 4G/5G 与本地存储扩展：内置 TF 卡与 SIM 卡插槽，可扩展 4G/5G 网络，实现高速稳定的无线通信与本地数据存储，无需外接模块即可快速部署，简化安装与维护，适合工业现场远程监控、数据采集及设备互联。\n4.  I/O 接口：配备 4x USB 3.0、1x HDMI、RS-485 × 2、CAN Bus × 1、CAN GPIO，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。\n5. 1x M.2 Key 2280 NVMe SSD 插槽，1x Mini PCle Wi-Fi 模组扩展", "模块构成": "", "产品特点": "", "产品介绍": "", "行业痛点": "", "销售亮点": "", "应用场景": ""}, {"编号": "6", "时间": "2026-03-16", "产品类型": "UTC", "型号": "UTC-W2192E", "料号": "C9.03.03.085", "料号描述": "21.5 inch;1920*1080;默认;电容触摸;CES-1902;i5-10210U;32G;SSD:512G;无,无;宽压输入-USB2.0x2,USB3.0x4;RJ45x2;AUDIOx1;RS232x4;RS485x2;HDMIx1,VGAx1;其他功能:支持冗余电源", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 宽压冗余电源 —— 系统配备双电源模块，即使其中一个模块出现故障，工业 PC 仍可正常运行，不会宕机，确保关键应用持续稳定，提高生产可靠性。 \n3. 支持宽压 9-36V DC 电源输入，适应复杂工业供电环境", "工业环境适应": "1. 电容屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 纯平面 10 点电容式触摸屏，多点触控，操作流畅，适合精细操作。\n2. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n3. 散热设计：无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。 \n4. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性\n5. 21.5 英寸 16:9 TFT LCD，分辨率 1920x1080 (FHD)", "连接与扩展": "1. 双 Intel® I210 千兆以太网接口：配备 双 Intel® I210 千兆以太网接口，提供工业级网络高速稳定传输，支持冗余与链路聚合，适合自动化控制、工业通信和数据采集场景。\n2. 丰富 I/O 接口：配备 4x USB 3.0、2x USB 2.0、4x RS232、2x RS485、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。\n3. 1x M.2 Key 2280 NVMe SSD 插槽，1x Mini PCle Wi-Fi 模组扩展", "模块构成": "", "产品特点": "", "产品介绍": "", "行业痛点": "", "销售亮点": "", "应用场景": ""}, {"编号": "7", "时间": "2026-03-16", "产品类型": "UTC", "型号": "UTC-S1262A", "料号": "C9.02.01.034", "料号描述": "12.1 inch;1024*768;默认;电容触摸;CES-1602-V1.1-J1900;J1900;4G;SSD:128G;WIFI;常规电压-,USB2.0x5,USB3.0x1;RJ45x2;AUDIOx1;RS232x1;RS485x2;HDMIx1,VGAx1;其他功能:-自启", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 3Pin 凤凰端子设计：配备 3Pin 凤凰端子，支持标准工业接线，安装和维护简便。", "工业环境适应": "1. 电容屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 纯平面 10 点电容式触摸屏，多点触控，操作流畅，适合精细操作。\n2. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n3. 散热设计：无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。 \n4. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性\n5. 12 英寸 4:3 TFT LCD，分辨率 1024x768 (XGA)", "连接与扩展": "1. 双 Intel® I210 千兆以太网接口：配备 双 Intel® I210 千兆以太网接口，提供工业级网络高速稳定传输，支持冗余与链路聚合，适合自动化控制、工业通信和数据采集场景。\n2. WiFi 和蓝牙：支持 WiFi 和蓝牙 无线通信，实现本地无线连接，方便工业现场设备互联和数据传输。\n3. 丰富 I/O 接口：配备 4x USB 3.0、2x USB 2.0、2x RS232、1x RS485、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。\n4. 1x Mini PCle Wi-Fi 模组扩展", "模块构成": "", "产品特点": "", "产品介绍": "", "行业痛点": "", "销售亮点": "", "应用场景": ""}, {"编号": "8", "时间": "2026-03-11", "产品类型": "WPC", "型号": "CTN-W2122B(A)", "料号": "C5.02.07.118", "料号描述": "21.5 inch;1920*1080;默认;电容触摸;CES-1201;I5-1235U;16G;SSD:1T;无,无;USB3.0x3;RJ45x1;HDMIx1;其他功能:-外部接口全为防水航插 其他功能：来电自启", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。", "工业环境适应": "1. 前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 纯平面 10 点电容式触摸屏，多点触控，操作流畅，适合精细操作。\n2. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n3. 无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。 \n4. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性\n5. 21.5 英寸 16:9 TFT LCD，分辨率 1920x1080 (FHD)", "连接与扩展": "防水接口、 单边出接口等", "模块构成": "", "产品特点": "适用于质检区、办公区及轻湿环境的工业级办公电脑升级方案", "产品介绍": "产品主要适用于质检区、办公区和轻湿环境，类似于食品厂的办公区，仓库区，靠近产线的位置，完成比如ERP的工作", "行业痛点": "目前很多这类区域用的都是办公电脑，环境湿度比较高，长时间下来办公电脑接口会生锈，从墨西哥客户那里了解到，他的终端客户一直买的是戴尔和联想一线商用品牌，但是一般使用寿命在9个月左右，接口就会有生锈的问题", "销售亮点": "工业级办公电脑升级方案\n1.搭载 Intel® Core™ i5-1235U 处理器，可以满足处理文件文档需求，很多商业电脑都会用这些处理器、 i 系列处理器既是传统商用电脑的常用配置，也适合小型微型电脑使用。”\n2.16GB DDR5：搭载 海力士 16GB DDR5 内存模块，SO‑DIMM 接口，频率 4800/5200 MHz，高稳定性，适合工业级应用。\n3. 1TB M.2 SSD：搭载 金士顿 1TB M.2 NVMe SSD，接口 M.2 Key 2280，顺序读写可达 2000+ MB/s，高性能工业级存储。\n4. 屏幕大小也客户工业电脑需求，办公都是21-27寸\n5. 无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。 \n对于质检区、办公区及轻湿环境\n6.客户目前是机箱+显示器 分体容易生锈，我们的是一体化设计，有效避免了分体连接处的腐蚀风险，同时结构更紧凑、稳定性更高，维护更方便。\n7. 接口布局优化：机器采用 单边接口设计，布局合理，更符合客户操作场景，提高使用便捷性。\n8. 主板内部做三防处理，前面板支持IP65+前框轻微防护处理\n9. 基于 CESIPC LEGO MODE 模块化架构设计，USB 网口，使用防水航插，完全考虑到客户预算，最合适的方案解决了最痛苦的问题\n10.内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能\n11.支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行\n12.工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n13. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。", "应用场景": "墨西哥食品工厂办公室"}, {"编号": "9", "时间": "2026-03-18", "产品类型": "EPC BOX PC", "型号": "EPC-102B", "料号": "C10.01.04.006", "料号描述": "CES-1201;I5-1235U;16G;SSD:256G;无;无;宽压输入-USB3.0x4;RJ45x4;AUDIOx1;HDMIx1,其他功能:来电自启", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 支持宽压 9-36V DC 电源输入，适应复杂工业供电环境\n3. 3Pin 凤凰端子设计：配备 3Pin 凤凰端子，支持标准工业接线，安装和维护简便。", "工业环境适应": "1. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n2. CESIPC 智能温控技术，通过硬件架构优化与算法调控，实现高效散热、性能释放与系统长期稳定运行，适合工业现场长期使用。\n3. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性", "连接与扩展": "1. 四个 Intel® I210 千兆以太网接口：配备 双 Intel® I210 千兆以太网接口，提供工业级网络高速稳定传输，支持冗余与链路聚合，适合自动化控制、工业通信和数据采集场景。\n2. I/O 接口：配备 4x USB 3.0、1x HDMI，高速数据传输，满足工业控制、数据采集及设备互联需求。\n3. 2x M.2 Key 2280 NVMe SSD 插槽，1x Mini PCle Wi-Fi 模组扩展", "模块构成": "", "产品特点": "", "产品介绍": "", "行业痛点": "", "销售亮点": "", "应用场景": ""}, {"编号": "10", "时间": "2026-03-16", "产品类型": "UTC", "型号": "UTC-W1522A", "料号": "C9.03.05.007", "料号描述": "15.6 inch;1920*1080;默认;电容触摸;CES-1201;I5-1235U;8G;SSD:256G;WIFI,蓝牙;宽压输入-USB2.0x2,USB3.0x4;RJ45x2;AUDIOx1,MICx1;RS232x4;RS485x2;HDMIx1,VGAx1;其他功能:来电自启", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 支持宽压 9-36V DC 电源输入，适应复杂工业供电环境\n3. 3Pin 凤凰端子设计：配备 3Pin 凤凰端子，支持标准工业接线，安装和维护简便。", "工业环境适应": "1. 电容屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 纯平面 10 点电容式触摸屏，多点触控，操作流畅，适合精细操作。\n2. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n3. 散热设计：无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。 \n4. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性\n5. 15.6 英寸 16:9 TFT LCD，分辨率 1920x1080 (FHD)", "连接与扩展": "1. 双 Intel® I210 千兆以太网接口：配备 双 Intel® I210 千兆以太网接口，提供工业级网络高速稳定传输，支持冗余与链路聚合，适合自动化控制、工业通信和数据采集场景。\n2. WiFi 和蓝牙：支持 WiFi 和蓝牙 无线通信，实现本地无线连接，方便工业现场设备互联和数据传输。\n3. 丰富 I/O 接口：配备 4x USB 3.0、2x USB 2.0、4x RS232、2x RS485、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。\n4. 2x M.2 Key 2280 NVMe SSD 插槽，1x Mini PCle Wi-Fi 模组扩展。", "模块构成": "", "产品特点": "", "产品介绍": "", "行业痛点": "", "销售亮点": "", "应用场景": ""}, {"编号": "11", "时间": "2026-03-16", "产品类型": "UTC", "型号": "UTC-S1282E", "料号": "C9.02.02.023", "料号描述": "12.1 inch;1024*768;默认;电容触摸;3802;I5-7360U;8G;SSD:128G;无线WIFI,无线蓝牙;宽压输入-USB3.0x4;RJ45x2;AUDIOx1,MICx1;RS232x4;HDMIx1;其他功能:-2pin航插 其他功能:  自启", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 宽压冗余电源 —— 系统配备双电源模块，即使其中一个模块出现故障，工业 PC 仍可正常运行，不会宕机，确保关键应用持续稳定，提高生产可靠性。\n3. M12 螺纹锁紧 2Pin 航插设计：采用 M12 螺纹锁紧 2Pin 航插接口，提供稳固可靠的电源连接，适用于复杂工业现场环境。", "工业环境适应": "1. 电容屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 纯平面 10 点电容式触摸屏，多点触控，操作流畅，适合精细操作。\n2. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n3. 散热设计：无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。 \n4. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性\n5. 12 英寸 4:3 TFT LCD，分辨率 1024x768 (XGA)", "连接与扩展": "1. 双 Realtek RTL8111HN 以太网接口：配备 双 Realtek RTL8111HN 千兆以太网接口，保证工业网络高速稳定传输，支持基本工业通信和局域网连接，适合中低负载工业应用。\n2. WiFi 和蓝牙：支持 WiFi 和蓝牙 无线通信，实现本地无线连接，方便工业现场设备互联和数据传输。\n3. 丰富 I/O 接口：配备 4x USB 3.0、2x USB 2.0、4x RS232、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。\n4. 1x Mini PCle Wi-Fi 模组扩展", "模块构成": "", "产品特点": "", "产品介绍": "", "行业痛点": "", "销售亮点": "", "应用场景": ""}, {"编号": "12", "时间": "2026-03-18", "产品类型": "UTC", "型号": "UTC-S1561A", "料号": "C9.03.01.020", "料号描述": "15 inch;1024*768;默认;电阻触摸;CES-1602;J1900;8G;SSD:256G;WIFI,BT;宽压输入-USB2.0x5,USB3.0x1;RJ45x2;AUDIOx1,MICx1;RS232x6;HDMIx1,VGAx1", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 支持宽压 9-36V DC 电源输入，适应复杂工业供电环境\n3. 3Pin 凤凰端子设计：配备 3Pin 凤凰端子，支持标准工业接线，安装和维护简便。\n4. 操作系统兼容性：完美支持Windows 7，兼容传统工业软件与控制系统，满足客户对长期稳定运行环境的需求", "工业环境适应": "1. 电阻屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 电阻式触摸屏，抗干扰能力强，支持单点触控，适合工业现场手套操作或高噪声环境。\n2. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n3. 散热设计：无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。 \n4. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性\n5. 15 英寸 4:3 TFT LCD，分辨率 1024x768 (XGA)", "连接与扩展": "1. 双 Realtek RTL8111HN 以太网接口：配备 双 Realtek RTL8111HN 千兆以太网接口，保证工业网络高速稳定传输，支持基本工业通信和局域网连接，适合中低负载工业应用。\n2. WiFi 和蓝牙：支持 WiFi 和蓝牙 无线通信，实现本地无线连接，方便工业现场设备互联和数据传输。\n3. 丰富 I/O 接口：配备 4x USB 3.0、2x USB 2.0、6x RS232（可选 RS485/RS422）、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。\n4. 1x Mini PCle Wi-Fi 模组扩展", "模块构成": "", "产品特点": "UTC 系列是 CESIPC 针对纺织厂生产线及工业设备控制场景推出的专用工业电脑\n\n具备防尘、防振动、长时间高负载稳定运行和模块化易维护等特点\n\n解决常规电脑在车间环境下易故障、连续运行不稳及维护成本高的痛点。", "产品介绍": "全球棉花生产高度集中，前六大主产国产量合计占全球总产量的 80% 以上。\n\n1. 亚洲产区（全球核心）\n*   中国：\n    *   地位：全球最大的棉花生产国（占比约 24%-29%）。\n    *   核心聚集地：新疆。新疆棉花产量占全国的 92.9%，全球约 20% 的棉花产自这里。这里是高端长绒棉的核心产区\n*   印度：\n    *   地位：全球第二大生产国（占比约 19%-23%）。\n    \n*   巴基斯坦：\n    *   地位：全球第五大生产国。\n\n2. 美洲产区（高效与规模化）\n*   巴西：\n    *   地位：全球第三大生产国，\n*   美国：\n    *   地位：全球第四大生产国\n\n*   澳大利亚：第六大生产国\n*   中亚地区：乌兹别克斯坦\n\n棉花在哪，纺织厂就在哪，资源密集型产业\n\n巴基斯坦纺织厂，包括织布、染色、整理及成品加工车间，用于生产线监控、数据采集、ERP、MES 系统及车间管理\n", "行业痛点": "连续运转压力大：咱们的生产线可是 24/7 全天候开着的，常规电脑扛不住长时间高负载，一用就容易卡、容易宕机。\n电力波动风险：车间电压不稳或者突然停电，常规电脑就容易罢工，数据丢了、系统崩了，维修还麻烦。\n纤维粉多：纺织车间空气里满是纤维粉，常规电脑的散热口一堵，轻则发热慢、卡顿，重则直接出故障。\n温湿度不稳定：染整车间温湿度经常大起大落，常规电脑容易死机、自动重启，整条线都得停下来等。\n数据安全和控制稳定性不足：生产数据、ERP、MES 这些系统都很重要，一旦电脑出问题，数据丢了或者系统崩了，整条生产线都麻烦。\n机器震动大：织机、压布机一直震啊震，常规电脑的硬盘、主板就受不了，时间长了肯定出问题。\n维修麻烦成本高：电脑一坏，停机去维修，找配件、重装系统，人工成本高，生产效率也掉得厉害。\n环境适应性差：常规办公电脑的机身结构不够坚固，一碰灰尘、一遇湿气、一震动就容易老化，特别不耐用。", "销售亮点": "1. Intel® Celeron J1900：主频 2.0 GHz，支持多核心多线程，低功耗设计，适合工业级基础应用。\n2. 我们的机器内存用的是海力士 8GB DDR3，硬盘用的是金士顿 256GB mSATA SSD，根据我们之前的项目经验和验证，性能稳定，使用完全没问题。 \n3. 我们最有优势的一点\n我们这套机器很多时候都是当上位机用的，用来采集车间的各种生产数据。\n纺织厂里机器特别多，包括纺纱机械、化纤机械、织造机械、针织机械、非织造布机械、染整机械，还有成衣机械和各种辅助设备。\n而且车间里还有很多大功率电机、变频器（VFD）、伺服驱动器、喷气织机的电磁阀等等，这些设备不仅会产生电网谐波，还会受到浪涌电流影响，有时候自己也会引起浪涌。\n所以针对这种 多棉絮、高温高湿、强干扰 的环境，我们建议用 “前端滤波 + 末端防浪涌” 的组合策略：\n· 前端滤波器\n也就是我们用的专用电源滤波器，这是一道第一道防线。\n它能把变频器产生的高频噪声和谐波过滤掉，避免干扰回到电网或者影响旁边的设备。\n·末端/输入级防护\n包括浪涌保护器和软启动设计，用来应对雷击、电网切换或者电容投切产生的瞬时高能脉冲。\n我们主板上也考虑了这个问题，做了压敏电阻、气体放电管、电感/电容网络等设计，能吸收这些瞬间脉冲，保护电脑稳定运行。\n4. TPM 2.0 可信平台模块：提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n5. 支持 CESIPC SafeCore™ 系统保护技术：防止非法断电导致系统文件损坏，保障系统稳定运行。\n6. 来电自启（Power-on after AC Recovery）：电力恢复后自动开机，保障无人值守场景下连续运行。\n7. 支持宽压 9-36V DC 电源输入：适应复杂工业供电环境。\n8. 3Pin 凤凰端子设计：支持标准工业接线，安装和维护简便。\n9. 操作系统兼容性：完美支持 Windows 7，兼容传统工业软件与控制系统，满足客户长期稳定运行需求。\n10. 双 Realtek RTL8111HN 以太网接口：保证工业网络高速稳定传输。\n11. WiFi 和蓝牙：支持无线通信，实现现场设备互联和数据传输。\n12. 丰富 I/O 接口：4x USB 3.0、2x USB 2.0、6x RS232（可选 RS485/RS422）、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输。\n13. 1x Mini PCIe Wi-Fi 模组扩展。", "应用场景": "巴基斯坦纺织厂"}, {"编号": "13", "时间": "2026-03-19", "产品类型": "UTC", "型号": "UTC-S1792E", "料号": "C9.03.03.087", "料号描述": "17 inch;1280*1024;默认;电容触摸;CES-1902;i5-10210U;16G;SSD:1T;无,无;宽压输入-USB2.0x2,USB3.0x4;RJ45x2;AUDIOx1;RS232x4;RS485x2;HDMIx1,VGAx1;其他功能:支持冗余电源", "计算与系统性能": "1. 我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。\n2. 我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。\n3. 内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n4. 支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n2. 支持宽压 9-36V DC 电源输入，适应复杂工业供电环境\n3. 宽压冗余电源 —— 系统配备双电源模块，即使其中一个模块出现故障，工业 PC 仍可正常运行，不会宕机，确保关键应用持续稳定，提高生产可靠性。\n4. 3Pin 凤凰端子设计：配备 3Pin 凤凰端子，支持标准工业接线，安装和维护简便。", "工业环境适应": "1. 电容屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 纯平面 10 点电容式触摸屏，多点触控，操作流畅，适合精细操作。\n2. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n3. 散热设计：无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。 \n4. 基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性", "连接与扩展": "1. 双 Intel® I210 千兆以太网接口：配备 双 Intel® I210 千兆以太网接口，提供工业级网络高速稳定传输，支持冗余与链路聚合，适合自动化控制、工业通信和数据采集场景。\n2. WiFi 和蓝牙：支持 WiFi 和蓝牙 无线通信，实现本地无线连接，方便工业现场设备互联和数据传输。\n3. 丰富 I/O 接口：配备 4x USB 3.0、2x USB 2.0、6x RS232（可选 RS485/RS422）、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。\n4. 1x M.2 Key 2280 NVMe SSD 插槽，1x Mini PCle Wi-Fi 模组扩展", "模块构成": "", "产品特点": "", "产品介绍": "", "行业痛点": "", "销售亮点": "", "应用场景": ""}], "sheet2": {"items": [{"序号": "1", "计算与系统性能": "我们的机器可以根据需求搭载从 Intel® Celeron 到 Core™ i7 的多款处理器，覆盖低功耗基础应用到高性能复杂计算任务，支持多核心多线程，兼顾稳定性与能效，非常适合工业级环境的各种上位机或控制任务。", "工业稳定运行": "1. 硬件看门狗：内置独立硬件看门狗模块，实时监控系统状态，出现死机或异常时自动复位重启，保证工业设备长期无人值守下稳定运行。", "工业环境适应": "电容屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 纯平面 10 点电容式触摸屏，多点触控，操作流畅，适合精细操作。\n\n电阻屏：前面板支持 IP65 防护等级，防尘防水，适合复杂工业环境。配备 电阻式触摸屏，抗干扰能力强，支持单点触控，适合工业现场手套操作或高噪声环境。", "连接与扩展": "1. 双 Intel® I210 千兆以太网接口：配备 双 Intel® I210 千兆以太网接口，提供工业级网络高速稳定传输，支持冗余与链路聚合，适合自动化控制、工业通信和数据采集场景。\n\n2. 双 Realtek RTL8111HN 以太网接口：配备 双 Realtek RTL8111HN 千兆以太网接口，保证工业网络高速稳定传输，支持基本工业通信和局域网连接，适合中低负载工业应用。", "_sid": "sel_0"}, {"序号": "2", "计算与系统性能": "我们的机器内存选用海力士，硬盘采用金士顿，这两款都是工业级稳定方案。根据我们多个项目的实际应用验证，长时间连续运行没有出现过性能问题，完全能够满足工业现场对可靠性和数据安全的要求，而且我们不会轻易更换这套配置，保证稳定性和一致性。", "工业稳定运行": "1. 来电自启（Power-on after AC Recovery）：电力恢复后系统自动重启，保障无人值守场景下的连续稳定运行。\n\n2. 网络唤醒（Wake-on-LAN, WOL）：支持通过网络远程开机与管理，即使设备处于关机或待机状态，也可通过网络信号快速唤醒系统，适用于无人值守、远程监控及集中管理场景，提升运维效率与系统可用性。", "工业环境适应": "1. 工业机身材质：采用 6061 高强度铝合金 + 钣金结构，工业级坚固机身，耐冲击、耐振动。\n\n2. 采用加固型手持设计，整机达到 IP65 防护等级，具备 1 米自由跌落抗冲击能力，确保在严苛环境下依然稳定运行。", "连接与扩展": "1. WiFi 和蓝牙：支持 WiFi 和蓝牙 无线通信，实现本地无线连接，方便工业现场设备互联和数据传输。\n\n2. 4G/5G 与本地存储扩展：内置 TF 卡与 SIM 卡插槽，可扩展 4G/5G 网络，实现高速稳定的无线通信与本地数据存储，无需外接模块即可快速部署，简化安装与维护，适合工业现场远程监控、数据采集及设备互联。", "_sid": "sel_1"}, {"序号": "3", "计算与系统性能": "", "工业稳定运行": "1. 支持宽压 9-36V DC 电源输入，适应复杂工业供电环境\n\n2. 内置 2900mAh 锂电池设计，在外部电源意外断电时，可提供最长约 15 分钟的续航延时关机，保障系统数据完整与运行安全。\n\n3. 智能电池保护模式，当设备连续一周未使用时，系统将自动进入电池保护状态，电流降至微安级低功耗模式，有效延长电池寿命并确保电池安全。\n\n4. 宽压冗余电源 —— 系统配备双电源模块，即使其中一个模块出现故障，工业 PC 仍可正常运行，不会宕机，确保关键应用持续稳定，提高生产可靠性。", "工业环境适应": "1. 散热设计：无风扇散热设计，保证静音运行，减少机械故障点，适合工业现场长期使用。 \n\n2. CESIPC 智能温控技术，通过硬件架构优化与算法调控，实现高效散热、性能释放与系统长期稳定运行，适合工业现场长期使用。", "连接与扩展": "丰富 I/O 接口：配备 4x USB 3.0、2x USB 2.0、6x RS232（可选 RS485/RS422）、1x HDMI、1x VGA，兼容多种工业外设与显示系统，高速数据传输，满足工业控制、数据采集及设备互联需求。", "_sid": "sel_2"}, {"序号": "4", "计算与系统性能": "内置 TPM 2.0 可信平台模块，提供硬件级安全加密、防护与身份验证功能，适用于 Intel 第 8 代及以上平台。\n\n支持 CESIPC SafeCore™ 系统保护技术，可有效防止工业现场因非法断电导致的系统文件损坏，保障系统稳定运行", "工业稳定运行": "1. 电源开关与状态指示：电源开关与状态指示可延伸至机柜前面板，便于集中管理与维护。\n\n2. M12 螺纹锁紧 2Pin 航插设计：采用 M12 螺纹锁紧 2Pin 航插接口，提供稳固可靠的电源连接，适用于复杂工业现场环境。\n\n3. 3Pin 凤凰端子设计：配备 3Pin 凤凰端子，支持标准工业接线，安装和维护简便。\n\n4. 外拉开关设计：电源线可加长延伸，满足工业现场多样化操作需求，提升安装灵活性与操作便利性。", "工业环境适应": "基于 CESIPC LEGO MODE 模块化架构设计，兼具灵活扩展与高可靠性", "连接与扩展": "1. 1x Mini PCle Wi-Fi 模组扩展\n2. 1x M.2 Key 2280 NVMe SSD 插槽，1x Mini PCle Wi-Fi 模组扩展\n3. 2x M.2 Key 2280 NVMe SSD 插槽，1x Mini PCle Wi-Fi 模组扩展", "_sid": "sel_3"}, {"序号": "其他", "计算与系统性能": "NVIDIA Jetson 系列规格与卖点\n\n1. NVIDIA Jetson Orin™ NX 8GB：搭载 NVIDIA Jetson Orin™ NX 8GB AI 模组，提供 最高 40 TOPS 边缘 AI 推理算力，集成 8 核 ARM CPU 与 1024 核 Ampere GPU，适合工业边缘 AI、机器视觉及智能控制应用。\n\n2. NVIDIA Jetson Orin™ NX 16GB：搭载 NVIDIA Jetson Orin™ NX 16GB AI 模组，提供 最高 70 TOPS 边缘 AI 推理算力，集成 8 核 ARM CPU 与 1024 核 Ampere GPU，适合工业边缘 AI、机器视觉及智能控制应用，兼顾高性能与低功耗。\n\n3. NVIDIA Jetson Orin™ Nano 4GB：搭载 NVIDIA Jetson Orin™ Nano 4GB AI 模组，提供 最高 21 TOPS 边缘 AI 推理算力，集成 4 核 ARM CPU 与 512 核 GPU，适合轻量级工业 AI 推理与嵌入式边缘计算应用。\n\n4. NVIDIA Jetson Orin™ Nano 8GB：搭载 NVIDIA Jetson Orin™ Nano 8GB AI 模组，提供 最高 21 TOPS 边缘 AI 推理算力，集成 4 核 ARM CPU 与 512 核 GPU，适合中小型工业边缘 AI、机器视觉与智能控制任务。\n\n5. NVIDIA Jetson Orin™ AGX / Developer Kit（可选 32GB 模组）：搭载 NVIDIA Jetson Orin™ AGX AI 模组，提供 最高 200 TOPS AI 推理算力，集成多核 ARM CPU 与 Ampere GPU，适合高性能工业边缘计算、复杂视觉处理及机器人控制应用。", "工业稳定运行": "操作系统兼容性：完美支持Windows 7，兼容传统工业软件与控制系统，满足客户对长期稳定运行环境的需求。", "工业环境适应": "", "连接与扩展": "CAN 总线模块：支持 CSM100T CAN 模块，实现稳定的 CAN 总线通信，便于设备互联与工业控制系统扩展。", "_sid": "sel_4"}, {"序号": "1. \n2. \n3. \n4. \n5. \n6.", "计算与系统性能": "", "工业稳定运行": "", "工业环境适应": "", "连接与扩展": "二维条码扫描器：扫描头位于顶部，支持高效扫描各种二维条码，方便仓储、物流及生产线应用\n（3mil 高精度识读，兼容屏幕/纸质/DPM 条码，支持 UART/USB（HID）接口灵活集成）", "_sid": "sel_5"}], "sub_headers": {"计算与系统性能": "1. 处理器 （代数，处理速度等） \n2. 内存 （接口，读写速度等） \n3. 硬盘（接口，读写速度等） \n4. TPM 2.0安全模块", "工业稳定运行": "1. 硬件看门狗 \n2. 来电自启 PXE / WOL\n3. 工业电源设计\n4. 凤凰端子电源", "工业环境适应": "1. IP65前面板\n2. 6061铝合金结构\n3. 无风扇散热\n4. 工业结构设计", "连接与扩展": "1. 双网口\n2. WiFi、4G扩展\n3. USB、RS232、HDMI、VGA\n4. M.2扩展、Mini PCIe扩展"}}};
+
+// Load from localStorage if available
+function loadData() {
+  try {
+    const saved = localStorage.getItem('everly_products');
+    const savedSel = localStorage.getItem('everly_selection');
+    return {
+      products: saved ? JSON.parse(saved) : INITIAL.sheet1.map((r,i)=>({...r,_id:Date.now()+i})),
+      selection: savedSel ? JSON.parse(savedSel) : INITIAL.sheet2
+    };
+  } catch(e) {
+    return {
+      products: INITIAL.sheet1.map((r,i)=>({...r,_id:Date.now()+i})),
+      selection: INITIAL.sheet2
+    };
+  }
+}
+
+let { products, selection } = loadData();
+let filtered = [...products];
+let sortCol = -1, sortDir = 1;
+let currentEditId = null;
+let currentCat = '计算与系统性能';
+let refTargetField = null;
+
+// ── AUTO SAVE ──
+function saveAll() {
+  try {
+    localStorage.setItem('everly_products', JSON.stringify(products));
+    localStorage.setItem('everly_selection', JSON.stringify(selection));
+    const fl = document.getElementById('savedFlash');
+    fl.classList.add('show');
+    clearTimeout(fl._t);
+    fl._t = setTimeout(()=>fl.classList.remove('show'), 2000);
+  } catch(e){}
+}
+
+// ── TYPE CONFIG ──
+const TC = {
+  'EPC BOX PC':   { cls:'t-blu', dot:'#5b8dee' },
+  'EPC PANEL PC': { cls:'t-grn', dot:'#43d9a0' },
+  'UTC':          { cls:'t-gld', dot:'#f0a84a' },
+  'AI':           { cls:'t-pur', dot:'#c678dd' },
+  'WPC':          { cls:'t-org', dot:'#ffa03c' },
+};
+const CAT_META = {
+  '计算与系统性能': { emoji:'⚡', color:'#5b8dee', field:'f_perf', dataKey:'计算与系统性能' },
+  '工业稳定运行':  { emoji:'🏭', color:'#43d9a0', field:'f_stab', dataKey:'工业稳定运行' },
+  '工业环境适应':  { emoji:'🛡', color:'#f0a84a', field:'f_env',  dataKey:'工业环境适应' },
+  '连接与扩展':   { emoji:'🔗', color:'#c678dd', field:'f_conn', dataKey:'连接与扩展' },
+};
+const CORE_CATS = ['计算与系统性能','工业稳定运行','工业环境适应','连接与扩展'];
+
+// Custom categories stored in selection
+function getCustomCats() {
+  return selection.custom_cats || [];
+}
+function getAllCats() {
+  return [...CORE_CATS, ...getCustomCats()];
+}
+function getCustomCatMeta(cat) {
+  if (CAT_META[cat]) return CAT_META[cat];
+  return { emoji:'📁', color:'#8892b8', field: null, dataKey: cat };
+}
+
+function tc(type){ return TC[type] || { cls:'t-blu', dot:'#5b8dee' }; }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+window.onload = () => {
+  buildFilters();
+  renderStats();
+  renderTable();
+  renderSidebar();
+  renderSelCounts();
+  renderSel();
+};
+
+function buildFilters() {
+  const types = [...new Set(products.map(r=>r['产品类型']).filter(Boolean))];
+  const sel = document.getElementById('typeFilt');
+  types.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t; o.textContent = t; sel.appendChild(o);
+  });
+}
+
+function renderStats() {
+  const typeCounts = {};
+  products.forEach(r => { if(r['产品类型']) typeCounts[r['产品类型']] = (typeCounts[r['产品类型']]||0)+1; });
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat"><div class="stat-lbl">产品总数</div><div class="stat-val" style="color:var(--acc)">${products.length}</div></div>
+    ${Object.entries(typeCounts).map(([k,v])=>{
+      const t=tc(k);
+      return `<div class="stat"><div class="stat-lbl">${k}</div><div class="stat-val" style="color:${t.dot}">${v}</div></div>`;
+    }).join('')}
+  `;
+}
+
+// ═══════════════════════════════════════════════════════
+//  TABLE (Tab 1) - with capability columns
+// ═══════════════════════════════════════════════════════
+function renderTable() {
+  const tbody = document.getElementById('tbody');
+  document.getElementById('cntBadge').textContent = `共 ${filtered.length} 条`;
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="12" class="no-data">🔍 没有匹配的产品</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered.map(r => {
+    const t = tc(r['产品类型']);
+    const desc = (r['料号描述']||'').substring(0,60);
+    const feat = r['产品特点'] || r['应用场景'] || '';
+    const perf = (r['计算与系统性能']||'').substring(0,120);
+    const stab = (r['工业稳定运行']||'').substring(0,120);
+    const env  = (r['工业环境适应']||'').substring(0,120);
+    const conn = (r['连接与扩展']||'').substring(0,120);
+    return `<tr onclick="openEdit(${r._id})">
+      <td style="color:var(--txt3)" class="cell-mono">${r['编号']||'—'}</td>
+      <td style="color:var(--txt3);font-size:12px">${r['时间']||'—'}</td>
+      <td><span class="tag ${t.cls}">${r['产品类型']||'—'}</span></td>
+      <td style="font-weight:600;color:var(--txt)" class="cell-mono">${esc(r['型号'])||'—'}</td>
+      <td style="color:var(--txt3);font-size:11px" class="cell-mono" title="${esc(r['料号'])}">${esc(r['料号'])||'—'}</td>
+      <td><div style="font-size:11.5px;color:var(--txt2);max-width:220px;word-break:break-all;white-space:normal;line-height:1.5" title="${esc(r['料号描述'])}">${esc(desc)}${(r['料号描述']||'').length>60?'…':''}</div></td>
+      <td class="cap-cell"><div class="cap-snippet${perf?'':' empty'}">${perf?esc(perf)+'…':'—'}</div></td>
+      <td class="cap-cell"><div class="cap-snippet${stab?'':' empty'}">${stab?esc(stab)+'…':'—'}</div></td>
+      <td class="cap-cell"><div class="cap-snippet${env?'':' empty'}">${env?esc(env)+'…':'—'}</div></td>
+      <td class="cap-cell"><div class="cap-snippet${conn?'':' empty'}">${conn?esc(conn)+'…':'—'}</div></td>
+      <td><div class="cell-prev" title="${esc(feat)}" style="color:${feat?'var(--acc3)':'var(--txt3)'}">${feat?esc(feat.substring(0,40))+(feat.length>40?'…':''):'—'}</div></td>
+      <td onclick="event.stopPropagation()">
+        <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px" onclick="openEdit(${r._id})">✏ 编辑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function doFilter() {
+  const q = document.getElementById('srch').value.toLowerCase();
+  const type = document.getElementById('typeFilt').value;
+  filtered = products.filter(r => {
+    const mType = !type || r['产品类型'] === type;
+    const mQ = !q || JSON.stringify(r).toLowerCase().includes(q);
+    return mType && mQ;
+  });
+  if (sortCol >= 0) applySort();
+  renderTable();
+}
+
+const sortKeys = [null,'时间','产品类型','型号','料号'];
+function doSort(col) {
+  if (col >= sortKeys.length) return;
+  if (sortCol === col) sortDir *= -1;
+  else { sortCol = col; sortDir = 1; }
+  document.querySelectorAll('thead th').forEach((th,i) => {
+    th.classList.remove('sa','sd');
+    if (i===col) th.classList.add(sortDir===1?'sa':'sd');
+  });
+  applySort();
+  renderTable();
+}
+function applySort() {
+  const key = sortKeys[sortCol];
+  if (!key) return;
+  filtered.sort((a,b) => (a[key]||'').localeCompare(b[key]||'','zh') * sortDir);
+}
+
+// ═══════════════════════════════════════════════════════
+//  EDIT MODAL
+// ═══════════════════════════════════════════════════════
+function openEdit(id) {
+  const r = products.find(x => x._id === id);
+  if (!r) return;
+  currentEditId = id;
+  document.getElementById('editTitle').textContent = r['型号'] || '产品详情';
+  document.getElementById('editSub').textContent = r['料号'] || '';
+  document.getElementById('f_num').value = r['编号'] || '';
+  document.getElementById('f_date').value = r['时间'] || '';
+  document.getElementById('f_type').value = r['产品类型'] || '';
+  document.getElementById('f_model').value = r['型号'] || '';
+  document.getElementById('f_pn').value = r['料号'] || '';
+  document.getElementById('f_desc').value = r['料号描述'] || '';
+  document.getElementById('f_perf').value = r['计算与系统性能'] || '';
+  document.getElementById('f_stab').value = r['工业稳定运行'] || '';
+  document.getElementById('f_env').value = r['工业环境适应'] || '';
+  document.getElementById('f_conn').value = r['连接与扩展'] || '';
+  document.getElementById('f_module').value = r['模块构成'] || '';
+  document.getElementById('f_feat').value = r['产品特点'] || '';
+  document.getElementById('f_intro').value = r['产品介绍'] || '';
+  document.getElementById('f_pain').value = r['行业痛点'] || '';
+  document.getElementById('f_high').value = r['销售亮点'] || '';
+  document.getElementById('f_scene').value = r['应用场景'] || '';
+  document.getElementById('deleteBtn').style.display = '';
+  document.getElementById('editOv').classList.add('open');
+}
+
+function openAddModal() {
+  currentEditId = null;
+  const nextNum = products.length > 0 ? Math.max(...products.map(p=>parseInt(p['编号'])||0)) + 1 : 1;
+  ['f_date','f_type','f_model','f_pn','f_desc','f_perf','f_stab','f_env','f_conn','f_module','f_feat','f_intro','f_pain','f_high','f_scene'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('f_num').value = String(nextNum);
+  document.getElementById('f_date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('editTitle').textContent = '新增产品';
+  document.getElementById('editSub').textContent = '填写基本信息后，可点击「📋 引用卖点库」快速填充能力描述';
+  document.getElementById('deleteBtn').style.display = 'none';
+  document.getElementById('editOv').classList.add('open');
+}
+
+function closeEdit() { document.getElementById('editOv').classList.remove('open'); }
+
+function saveProduct() {
+  const data = {
+    '编号': document.getElementById('f_num').value.trim(),
+    '时间': document.getElementById('f_date').value,
+    '产品类型': document.getElementById('f_type').value.trim(),
+    '型号': document.getElementById('f_model').value.trim(),
+    '料号': document.getElementById('f_pn').value.trim(),
+    '料号描述': document.getElementById('f_desc').value.trim(),
+    '计算与系统性能': document.getElementById('f_perf').value.trim(),
+    '工业稳定运行': document.getElementById('f_stab').value.trim(),
+    '工业环境适应': document.getElementById('f_env').value.trim(),
+    '连接与扩展': document.getElementById('f_conn').value.trim(),
+    '模块构成': document.getElementById('f_module').value.trim(),
+    '产品特点': document.getElementById('f_feat').value.trim(),
+    '产品介绍': document.getElementById('f_intro').value.trim(),
+    '行业痛点': document.getElementById('f_pain').value.trim(),
+    '销售亮点': document.getElementById('f_high').value.trim(),
+    '应用场景': document.getElementById('f_scene').value.trim(),
+  };
+  if (currentEditId !== null) {
+    const idx = products.findIndex(p => p._id === currentEditId);
+    if (idx >= 0) products[idx] = { ...products[idx], ...data };
+  } else {
+    data._id = Date.now();
+    products.push(data);
+    // Rebuild type filters
+    [document.getElementById('typeFilt')].forEach(sel => {
+      if (sel && data['产品类型'] && !Array.from(sel.options).some(o=>o.value===data['产品类型'])) {
+        const o = document.createElement('option');
+        o.value = data['产品类型']; o.textContent = data['产品类型'];
+        sel.appendChild(o);
+      }
+    });
+  }
+  filtered = [...products];
+  renderStats();
+  renderTable();
+  saveAll();
+  closeEdit();
+}
+
+function deleteProduct() {
+  if (!confirm('确认删除该产品记录？')) return;
+  products = products.filter(p => p._id !== currentEditId);
+  filtered = [...products];
+  renderStats();
+  renderTable();
+  saveAll();
+  closeEdit();
+}
+
+// ═══════════════════════════════════════════════════════
+//  SELECTION TAB
+// ═══════════════════════════════════════════════════════
+function renderSidebar() {
+  const sidebar = document.getElementById('catSidebar');
+  const allCats = getAllCats();
+  sidebar.innerHTML = allCats.map(cat => {
+    const meta = getCustomCatMeta(cat);
+    const cnt = selection.items.filter(it => (it[cat]||'').trim()).length;
+    const isCustom = !CORE_CATS.includes(cat);
+    const isActive = cat === currentCat;
+    return `<div style="display:flex;align-items:center;border-bottom:1px solid var(--bdr);">
+      <button class="sel-cat-btn${isActive?' active':''}" id="catBtn_${esc(cat)}" onclick="switchCat(${JSON.stringify(cat)},this)" style="flex:1;border-bottom:none;">
+        <span>${meta.emoji}</span> ${esc(cat)}
+        <span class="cnt-pill" id="cnt_${esc(cat)}">${cnt}</span>
+      </button>
+      ${isCustom ? `<button onclick="deleteCustomCat(${JSON.stringify(cat)})" title="删除分类" style="background:none;border:none;color:var(--txt3);cursor:pointer;padding:0 10px;font-size:14px;flex-shrink:0;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--txt3)'">✕</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderSelCounts() {
+  getAllCats().forEach(c => {
+    const cnt = selection.items.filter(it => (it[c]||'').trim()).length;
+    const el = document.getElementById('cnt_'+c);
+    if (el) el.textContent = cnt;
+  });
+}
+
+function switchCat(cat, el) {
+  currentCat = cat;
+  renderSidebar();
+  renderSel();
+}
+
+function promptAddCat() {
+  const name = prompt('输入新分类名称（如：其他 / 售后服务 / 认证资质）：');
+  if (!name || !name.trim()) return;
+  const trimmed = name.trim();
+  if (getAllCats().includes(trimmed)) { alert('该分类已存在'); return; }
+  if (!selection.custom_cats) selection.custom_cats = [];
+  selection.custom_cats.push(trimmed);
+  if (!selection.sub_headers) selection.sub_headers = {};
+  selection.sub_headers[trimmed] = '';
+  saveAll();
+  currentCat = trimmed;
+  renderSidebar();
+  renderSel();
+}
+
+function deleteCustomCat(cat) {
+  if (!confirm(`删除分类「${cat}」？该分类下的卖点条目也会一并删除。`)) return;
+  selection.custom_cats = (selection.custom_cats||[]).filter(c => c !== cat);
+  selection.items.forEach(it => { delete it[cat]; });
+  if (currentCat === cat) currentCat = CORE_CATS[0];
+  saveAll();
+  renderSidebar();
+  renderSel();
+}
+
+function renderSel(query) {
+  const meta = getCustomCatMeta(currentCat);
+  const q = query || document.getElementById('selSrch').value.toLowerCase();
+  const sub = (selection.sub_headers && selection.sub_headers[currentCat]) || '';
+
+  const items = selection.items.filter(it => {
+    const txt = it[currentCat] || '';
+    if (!txt.trim()) return false;
+    if (q) return txt.toLowerCase().includes(q);
+    return true;
+  });
+
+  const html = `
+    <div class="sel-c-hdr">
+      <div>
+        <div class="sel-c-title" style="color:${meta.color}"><span>${meta.emoji}</span>${currentCat}能力</div>
+        ${sub ? `<div class="sel-c-desc">${esc(sub)}</div>` : ''}
+      </div>
+    </div>
+    <div class="sel-item-list" id="selItemList">
+      ${items.length ? items.map(it => renderSelItem(it, q)).join('') : `<div class="empty-sel">暂无内容，点击「新增条目」添加</div>`}
+    </div>
+    <div class="add-item-row">
+      <textarea class="add-item-input" id="newItemInput" rows="2" placeholder="输入新卖点内容，点击添加…"></textarea>
+      <button class="btn btn-prim" onclick="commitAddItem()" style="align-self:flex-end">添加</button>
+    </div>
+  `;
+  document.getElementById('selContent').innerHTML = html;
+}
+
+function renderSelItem(it, q) {
+  const text = it[currentCat] || '';
+  const displayText = q ? hlText(esc(text), q) : esc(text);
+  return `<div class="sel-item" id="si_${it._sid}">
+    <div class="sel-item-num">${esc(it['序号'])}</div>
+    <div class="sel-item-body">
+      <div class="sel-item-text" id="sit_${it._sid}">${displayText}</div>
+      <textarea class="sel-item-edit fta" id="sie_${it._sid}" rows="4">${esc(text)}</textarea>
+      <div class="sel-item-actions">
+        <button class="item-btn copy" onclick="copySelText('${it._sid}')">📋 复制</button>
+        <button class="item-btn" onclick="toggleEditSel('${it._sid}')">✏ 编辑</button>
+        <button class="item-btn save" id="saveBtn_${it._sid}" onclick="saveSelItem('${it._sid}')" style="display:none">💾 保存</button>
+        <button class="item-btn del" onclick="deleteSelItem('${it._sid}')">删除</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function hlText(text, q) {
+  if (!q) return text;
+  return text.replace(new RegExp(escRe(q),'gi'), m=>`<span class="highlight">${m}</span>`);
+}
+function escRe(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+
+function filterSel() { renderSel(); }
+
+function toggleEditSel(sid) {
+  const textEl = document.getElementById('sit_'+sid);
+  const editEl = document.getElementById('sie_'+sid);
+  const saveBtn = document.getElementById('saveBtn_'+sid);
+  if (editEl.style.display === 'block') {
+    editEl.style.display = 'none';
+    textEl.style.display = '';
+    saveBtn.style.display = 'none';
+  } else {
+    editEl.style.display = 'block';
+    textEl.style.display = 'none';
+    saveBtn.style.display = '';
+    editEl.focus();
+  }
+}
+
+function saveSelItem(sid) {
+  const editEl = document.getElementById('sie_'+sid);
+  const newVal = editEl.value;
+  const it = selection.items.find(x => x._sid === sid);
+  if (it) {
+    it[currentCat] = newVal;
+    saveAll();
+    renderSelCounts();
+    renderSel();
+  }
+}
+
+function deleteSelItem(sid) {
+  if (!confirm('删除该条卖点？')) return;
+  const it = selection.items.find(x => x._sid === sid);
+  if (it) {
+    it[currentCat] = '';
+    const allEmpty = getAllCats().every(c => !(it[c]||'').trim());
+    if (allEmpty) selection.items = selection.items.filter(x => x._sid !== sid);
+  }
+  saveAll();
+  renderSelCounts();
+  renderSel();
+}
+
+function addSelItem() {
+  renderSel();
+  setTimeout(()=>{ const inp = document.getElementById('newItemInput'); if(inp) inp.focus(); }, 100);
+}
+
+function commitAddItem() {
+  const input = document.getElementById('newItemInput');
+  if (!input) return;
+  const val = input.value.trim();
+  if (!val) return;
+  const nextNum = selection.items.length + 1;
+  const sid = 'sel_' + Date.now();
+  const newItem = { _sid: sid, '序号': String(nextNum) };
+  getAllCats().forEach(c => { newItem[c] = ''; });
+  newItem[currentCat] = val;
+  selection.items.push(newItem);
+  saveAll();
+  renderSelCounts();
+  renderSel();
+}
+
+function copySelText(sid) {
+  const it = selection.items.find(x => x._sid === sid);
+  if (!it) return;
+  const text = it[currentCat] || '';
+  navigator.clipboard.writeText(text).then(() => showToast('已复制到剪贴板'));
+}
+
+function showToast(msg) {
+  const t = document.getElementById('copyToast');
+  t.textContent = '✓ ' + msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+// ═══════════════════════════════════════════════════════
+//  REFERENCE DRAWER - works for both new & edit products
+// ═══════════════════════════════════════════════════════
+function openRef(cat, targetFieldId) {
+  refTargetField = targetFieldId;
+  const meta = getCustomCatMeta(cat);
+  document.getElementById('refTitle').textContent = meta.emoji + ' ' + cat + ' 卖点库';
+
+  const body = document.getElementById('refBody');
+  body.innerHTML = '';
+
+  const section = document.createElement('div');
+  section.className = 'ref-section';
+
+  const titleEl = document.createElement('div');
+  titleEl.className = 'ref-section-title';
+  titleEl.textContent = meta.emoji + ' ' + cat;
+  section.appendChild(titleEl);
+
+  const validItems = selection.items.filter(it => (it[cat]||'').trim());
+  if (validItems.length) {
+    validItems.forEach(it => {
+      const text = it[cat] || '';
+      const row = document.createElement('div');
+      row.className = 'ref-row';
+
+      const numEl = document.createElement('div');
+      numEl.className = 'ref-row-num';
+      numEl.textContent = it['序号'];
+
+      const bodyEl = document.createElement('div');
+      bodyEl.style.flex = '1';
+
+      const textEl = document.createElement('div');
+      textEl.className = 'ref-row-text';
+      textEl.textContent = text;
+
+      const hintEl = document.createElement('div');
+      hintEl.className = 'ref-use-hint';
+      hintEl.textContent = '↩ 点击追加到字段';
+
+      bodyEl.appendChild(textEl);
+      bodyEl.appendChild(hintEl);
+      row.appendChild(numEl);
+      row.appendChild(bodyEl);
+
+      row.addEventListener('click', function(e) {
+        e.stopPropagation();
+        insertRef(text);
+      });
+
+      section.appendChild(row);
+    });
+  } else {
+    const empty = document.createElement('div');
+    empty.className = 'empty-sel';
+    empty.innerHTML = '该维度暂无卖点条目<br><small style="color:var(--txt3)">请先到「卖点素材库」添加内容</small>';
+    section.appendChild(empty);
+  }
+
+  body.appendChild(section);
+  document.getElementById('refDrawer').classList.add('open');
+}
+
+function insertRef(text) {
+  if (!refTargetField) return;
+  const el = document.getElementById(refTargetField);
+  if (!el) return;
+  const cur = el.value.trim();
+  el.value = cur ? cur + '\n\n' + text : text;
+  el.focus();
+  closeRef();
+  showToast('已追加到字段 ✓');
+}
+
+function closeRef() { document.getElementById('refDrawer').classList.remove('open'); }
+
+// ─── Ensure selection items have _sid ───
+(function ensureSids() {
+  selection.items.forEach((it, i) => {
+    if (!it._sid) it._sid = 'sel_' + i + '_' + Date.now();
+  });
+})();
+
+// ═══════════════════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════════════════
+function switchTab(id, el) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════
+//  EXPORT EXCEL - Professional template
+// ═══════════════════════════════════════════════════════
+function exportExcel() {
+  const wb = XLSX.utils.book_new();
+
+  // ── Sheet 1: 产品学习总结表 ──
+  const h1 = ['编号','日期','产品类型','型号','料号','料号描述',
+    '⚡ 计算与系统性能','🏭 工业稳定运行','🛡 工业环境适应','🔗 连接与扩展',
+    '模块构成','✨ 产品特点（一句话定位）','💡 产品介绍（对客户说的话）',
+    '❗ 行业痛点','🏆 销售亮点','🌍 应用场景'];
+
+  const rows1 = products.map(r=>[
+    r['编号'],r['时间'],r['产品类型'],r['型号'],r['料号'],r['料号描述'],
+    r['计算与系统性能'],r['工业稳定运行'],r['工业环境适应'],r['连接与扩展'],
+    r['模块构成'],r['产品特点'],r['产品介绍'],r['行业痛点'],r['销售亮点'],r['应用场景']
+  ]);
+
+  const ws1 = XLSX.utils.aoa_to_sheet([h1,...rows1]);
+
+  // Column widths
+  ws1['!cols'] = [
+    {wch:6},{wch:12},{wch:14},{wch:16},{wch:20},{wch:45},
+    {wch:50},{wch:50},{wch:50},{wch:50},
+    {wch:30},{wch:30},{wch:50},{wch:50},{wch:50},{wch:20}
+  ];
+
+  // Row heights: header tall, data rows auto
+  ws1['!rows'] = [{hpt:28},...rows1.map(()=>({hpt:80}))];
+
+  // Header style
+  const headerStyle = {
+    font:{bold:true, sz:11, color:{rgb:'FFFFFF'}},
+    fill:{fgColor:{rgb:'1E2436'}},
+    alignment:{wrapText:true, vertical:'center', horizontal:'center'},
+    border:{
+      bottom:{style:'medium',color:{rgb:'5B8DEE'}},
+      right:{style:'thin',color:{rgb:'2D3554'}}
+    }
+  };
+
+  // Apply header styles
+  const range = XLSX.utils.decode_range(ws1['!ref']);
+  for (let C = range.s.c; C <= range.e.c; C++) {
+    const addr = XLSX.utils.encode_cell({r:0, c:C});
+    if (!ws1[addr]) continue;
+    ws1[addr].s = headerStyle;
+  }
+
+  // Data cell styles
+  const dataStyle = {
+    alignment:{wrapText:true, vertical:'top'},
+    font:{sz:10},
+    border:{
+      bottom:{style:'thin',color:{rgb:'2D3554'}},
+      right:{style:'thin',color:{rgb:'2D3554'}}
+    }
+  };
+
+  const capStyle = {
+    ...dataStyle,
+    fill:{fgColor:{rgb:'1A2035'}}
+  };
+
+  for (let R = 1; R <= rows1.length; R++) {
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const addr = XLSX.utils.encode_cell({r:R, c:C});
+      if (!ws1[addr]) ws1[addr] = {t:'s', v:''};
+      ws1[addr].s = (C >= 6 && C <= 9) ? capStyle : dataStyle;
+    }
+  }
+
+  XLSX.utils.book_append_sheet(wb, ws1, '2026产品学习总结表');
+
+  // ── Sheet 2: 产品介绍快速参考（销售视角）──
+  const h2 = ['产品型号','类型','料号','一句话定位','客户介绍话术','行业痛点','销售亮点','应用场景'];
+  const rows2 = products.map(r=>[
+    r['型号'],r['产品类型'],r['料号'],
+    r['产品特点']||'',r['产品介绍']||'',
+    r['行业痛点']||'',r['销售亮点']||'',r['应用场景']||''
+  ]);
+
+  const ws2 = XLSX.utils.aoa_to_sheet([h2,...rows2]);
+  ws2['!cols'] = [{wch:16},{wch:14},{wch:20},{wch:30},{wch:60},{wch:50},{wch:60},{wch:20}];
+  ws2['!rows'] = [{hpt:28},...rows2.map(()=>({hpt:90}))];
+
+  const h2Style = {
+    font:{bold:true, sz:11, color:{rgb:'FFFFFF'}},
+    fill:{fgColor:{rgb:'1B3A2D'}},
+    alignment:{wrapText:true, vertical:'center', horizontal:'center'},
+    border:{bottom:{style:'medium',color:{rgb:'43D9A0'}}}
+  };
+
+  const r2 = XLSX.utils.decode_range(ws2['!ref']);
+  for (let C = r2.s.c; C <= r2.e.c; C++) {
+    const addr = XLSX.utils.encode_cell({r:0, c:C});
+    if (!ws2[addr]) continue;
+    ws2[addr].s = h2Style;
+  }
+
+  const salesStyle = {
+    alignment:{wrapText:true, vertical:'top'},
+    font:{sz:10},
+    border:{bottom:{style:'thin',color:{rgb:'2D3554'}},right:{style:'thin',color:{rgb:'2D3554'}}}
+  };
+  const highlightStyle = {
+    ...salesStyle,
+    fill:{fgColor:{rgb:'1A2A1A'}}
+  };
+
+  for (let R = 1; R <= rows2.length; R++) {
+    for (let C = r2.s.c; C <= r2.e.c; C++) {
+      const addr = XLSX.utils.encode_cell({r:R, c:C});
+      if (!ws2[addr]) ws2[addr] = {t:'s', v:''};
+      ws2[addr].s = (C === 6) ? highlightStyle : salesStyle;
+    }
+  }
+
+  XLSX.utils.book_append_sheet(wb, ws2, '🗂客户介绍快速参考');
+
+  // ── Sheet 3: SELECTION卖点库 ──
+  const cats = getAllCats();
+  const h3 = ['序号',...cats.map(c=>'['+c+']')];
+  const subH = ['',...cats.map(c=>selection.sub_headers[c]||'')];
+  const rows3 = selection.items.map(it=>[it['序号'],...cats.map(c=>it[c]||'')]);
+
+  const ws3 = XLSX.utils.aoa_to_sheet([h3,subH,...rows3]);
+  ws3['!cols'] = [{wch:8},{wch:50},{wch:50},{wch:50},{wch:50}];
+  ws3['!rows'] = [{hpt:28},{hpt:40},...rows3.map(()=>({hpt:80}))];
+
+  const h3Style = {
+    font:{bold:true, sz:11, color:{rgb:'FFFFFF'}},
+    fill:{fgColor:{rgb:'252B3D'}},
+    alignment:{wrapText:true, vertical:'center', horizontal:'center'},
+    border:{bottom:{style:'medium',color:{rgb:'C678DD'}}}
+  };
+
+  const r3 = XLSX.utils.decode_range(ws3['!ref']);
+  for (let C = r3.s.c; C <= r3.e.c; C++) {
+    const addr = XLSX.utils.encode_cell({r:0, c:C});
+    if (!ws3[addr]) continue;
+    ws3[addr].s = h3Style;
+  }
+
+  const selDataStyle = {
+    alignment:{wrapText:true, vertical:'top'},
+    font:{sz:10},
+    border:{bottom:{style:'thin',color:{rgb:'2D3554'}},right:{style:'thin',color:{rgb:'2D3554'}}}
+  };
+  for (let R = 1; R <= rows3.length+1; R++) {
+    for (let C = r3.s.c; C <= r3.e.c; C++) {
+      const addr = XLSX.utils.encode_cell({r:R, c:C});
+      if (!ws3[addr]) ws3[addr] = {t:'s', v:''};
+      ws3[addr].s = selDataStyle;
+    }
+  }
+
+  XLSX.utils.book_append_sheet(wb, ws3, '📌SELECTION卖点库');
+
+  const ts = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  XLSX.writeFile(wb, `产品学习系统-Everly-${ts}.xlsx`);
+  showToast('导出成功！');
+}
+</script>
+</body>
+</html>
