@@ -2107,105 +2107,100 @@ function showEditDocCatForm(idx){
 }
 
 /* ── DOC EVENT INIT (appended to existing DOMContentLoaded) ─────────────── */
-/* ── TRANSLATE DOC ZH → EN (Claude API) ──────────────────────────────── */
+/* ── TRANSLATE DOC ZH → EN (Google Translate, no API key) ───────────── */
+async function gtrans(text) {
+  if (!text || !text.trim()) return text;
+  var url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=zh-CN&tl=en&dt=t&q=' + encodeURIComponent(text);
+  var res = await fetch(url);
+  var json = await res.json();
+  // Response structure: [[[translated, original, ...], ...], ...]
+  return (json[0] || []).map(function(seg){ return seg[0] || ''; }).join('');
+}
+
 async function translateDocToEn() {
   var zhData = readDocForm('zh');
   if (!zhData.title && !zhData.summary && !(zhData.sections && zhData.sections.length)) {
     toast('请先填写中文内容再翻译'); return;
   }
+
   var btn = document.getElementById('translateDocBtn');
   btn.disabled = true; btn.textContent = '⏳ 翻译中…';
 
-  // Build a structured JSON payload for Claude to translate
-  var payload = {
-    title: zhData.title,
-    subtitle: zhData.subtitle,
-    summary: zhData.summary,
-    note: zhData.note,
-    sections: (zhData.sections || []).map(function(sec) {
-      return {
-        title: sec.title,
-        subs: (sec.subs || []).map(function(sub) {
-          return {
-            title: sub.title,
-            body: sub.body,
-            blocks: (sub.blocks || []).map(function(b) {
-              if (b.type === 'text') return { type: 'text', text: b.text };
-              if (b.type === 'table') return {
-                type: 'table',
-                headers: b.headers,
-                rows: b.rows
-              };
-              return b; // img blocks: keep as-is
-            })
-          };
-        })
-      };
-    })
-  };
-
-  var systemPrompt = 'You are a professional translator. Translate the following JSON document fields from Chinese to English. Return ONLY valid JSON in exactly the same structure, with all text values translated. Do not add or remove any keys. For image blocks (type="img"), keep them unchanged. Preserve line breaks (\\n) in text fields.';
-
   try {
-    var res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
-        messages: [{ role: 'user', content: 'Translate this document JSON:\n' + JSON.stringify(payload, null, 2) }],
-        system: systemPrompt
-      })
-    });
-    var data = await res.json();
-    var rawText = (data.content || []).map(function(c) { return c.text || ''; }).join('');
-    // Strip markdown code fences if present
-    rawText = rawText.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/i, '').trim();
-    var translated = JSON.parse(rawText);
+    // Collect all text strings that need translating, translate in parallel
+    var jobs = [];
+    function addJob(text) { var i = jobs.length; jobs.push(text); return i; }
 
-    // Build en sections data with blocks preserved
-    var enSections = (translated.sections || []).map(function(sec, si) {
-      var origSec = zhData.sections[si] || {};
+    var titleIdx    = addJob(zhData.title || '');
+    var subtitleIdx = addJob(zhData.subtitle || '');
+    var summaryIdx  = addJob(zhData.summary || '');
+    var noteIdx     = addJob(zhData.note || '');
+
+    // Sections: each section title + each sub title + each text block
+    var secMeta = (zhData.sections || []).map(function(sec) {
+      var secTitleIdx = addJob(sec.title || '');
+      var subMeta = (sec.subs || []).map(function(sub) {
+        var subTitleIdx = addJob(sub.title || '');
+        var blockMeta = (sub.blocks && sub.blocks.length ? sub.blocks : (sub.body ? [{type:'text',text:sub.body}] : [])).map(function(b) {
+          if (b.type === 'text') {
+            return { type: 'text', textIdx: addJob(b.text || '') };
+          } else if (b.type === 'table') {
+            var headerIdxs = (b.headers || []).map(function(h){ return addJob(h); });
+            var rowIdxs = (b.rows || []).map(function(row){ return row.map(function(cell){ return addJob(cell); }); });
+            return { type: 'table', headerIdxs: headerIdxs, rowIdxs: rowIdxs, origBlock: b };
+          } else {
+            return { type: 'img', origBlock: b }; // images: keep as-is
+          }
+        });
+        return { subTitleIdx: subTitleIdx, blockMeta: blockMeta, origSub: sub };
+      });
+      return { secTitleIdx: secTitleIdx, subMeta: subMeta };
+    });
+
+    // Translate all at once (parallel)
+    var results = await Promise.all(jobs.map(function(t){ return gtrans(t); }));
+
+    // Reassemble
+    var enSections = secMeta.map(function(sm) {
       return {
-        title: sec.title || '',
-        subs: (sec.subs || []).map(function(sub, subi) {
-          var origSub = (origSec.subs || [])[subi] || {};
-          // Merge translated blocks back, keeping img blocks from original
-          var translatedBlocks = (sub.blocks || []).map(function(b, bi) {
-            var origBlock = (origSub.blocks || [])[bi] || {};
-            if (b.type === 'img') return origBlock; // keep original img with src
-            return b;
+        title: results[sm.secTitleIdx] || '',
+        subs: sm.subMeta.map(function(subm) {
+          var blocks = subm.blockMeta.map(function(bm) {
+            if (bm.type === 'text') return { type: 'text', text: results[bm.textIdx] || '' };
+            if (bm.type === 'table') {
+              return {
+                type: 'table',
+                headers: bm.headerIdxs.map(function(i){ return results[i] || ''; }),
+                rows: bm.rowIdxs.map(function(rowI){ return rowI.map(function(i){ return results[i] || ''; }); })
+              };
+            }
+            return bm.origBlock;
           });
-          // If no blocks but has body (legacy), convert
-          var finalBlocks = translatedBlocks.length ? translatedBlocks
-            : (sub.body ? [{ type: 'text', text: sub.body }] : []);
           return {
-            title: sub.title || '',
-            body: sub.body || '',
-            rich: origSub.rich || [],
-            blocks: finalBlocks
+            title: results[subm.subTitleIdx] || '',
+            body: '',
+            rich: subm.origSub.rich || [],
+            blocks: blocks
           };
         })
       };
     });
 
-    // Fill EN form
     initDocForm('en', {
-      title: translated.title || '',
-      subtitle: translated.subtitle || '',
-      summary: translated.summary || '',
-      note: translated.note || '',
-      date: zhData.date,
-      version: zhData.version,
+      title:    results[titleIdx] || '',
+      subtitle: results[subtitleIdx] || '',
+      summary:  results[summaryIdx] || '',
+      note:     results[noteIdx] || '',
+      date:     zhData.date,
+      version:  zhData.version,
       sections: enSections
     });
 
-    // Switch to EN tab so user sees the result
     switchDocLang('en');
     toast('✅ 翻译完成，已填入英文栏');
   } catch(e) {
     console.error(e);
-    toast('翻译失败，请重试');
+    toast('翻译失败，请检查网络后重试');
   } finally {
     btn.disabled = false; btn.textContent = '✨ 翻译至英文';
   }
