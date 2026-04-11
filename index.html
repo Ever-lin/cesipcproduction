@@ -326,6 +326,36 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
 ::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px;}::-webkit-scrollbar-thumb:hover{background:var(--txt3);}
 .hl{background:rgba(91,141,238,.22);border-radius:2px;padding:0 1px;}
+
+/* ── DOC SECTION SUB-ITEMS ── */
+.doc-sub-item{background:var(--sur3);border:1px solid var(--bdr2);border-radius:6px;padding:10px 12px;margin-bottom:8px;position:relative;}
+.doc-sub-item:last-child{margin-bottom:0;}
+.doc-sub-title-row{display:flex;gap:8px;margin-bottom:6px;align-items:center;}
+.doc-sub-title-row input{flex:1;}
+.doc-sub-rm{background:none;border:none;color:var(--txt3);cursor:pointer;font-size:13px;padding:2px 5px;border-radius:4px;flex-shrink:0;}
+.doc-sub-rm:hover{background:rgba(224,108,117,.15);color:var(--red);}
+.doc-sub-add{width:100%;padding:6px;background:rgba(198,120,221,.07);border:1px dashed rgba(198,120,221,.25);border-radius:5px;color:var(--acc4);font-size:11.5px;cursor:pointer;font-family:inherit;margin-top:6px;transition:all .15s;}
+.doc-sub-add:hover{background:rgba(198,120,221,.14);}
+/* ── IMAGE + TABLE TOOLS ── */
+.rich-toolbar{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+.rich-btn{padding:4px 10px;border-radius:5px;border:1px solid var(--bdr);background:var(--sur2);color:var(--txt2);font-size:11.5px;cursor:pointer;font-family:inherit;transition:all .15s;}
+.rich-btn:hover{border-color:var(--acc);color:var(--acc);}
+.rich-img-wrap{margin:8px 0;position:relative;display:inline-block;max-width:100%;}
+.rich-img-wrap img{max-width:100%;border-radius:5px;border:1px solid var(--bdr);}
+.rich-img-rm{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;padding:2px 6px;}
+.rich-table-wrap{overflow-x:auto;margin:8px 0;}
+.rich-table{border-collapse:collapse;font-size:12px;min-width:200px;}
+.rich-table td,.rich-table th{border:1px solid var(--bdr2);padding:5px 9px;background:var(--sur2);color:var(--txt);min-width:80px;outline:none;}
+.rich-table th{background:var(--sur3);font-weight:600;color:var(--acc);}
+.rich-table-ctrl{display:flex;gap:5px;margin-bottom:4px;flex-wrap:wrap;}
+.rich-table-ctrl button{padding:3px 8px;border-radius:4px;border:1px solid var(--bdr);background:var(--sur2);color:var(--txt3);font-size:11px;cursor:pointer;font-family:inherit;}
+.rich-table-ctrl button:hover{border-color:var(--acc);color:var(--acc);}
+/* gdoc image/table for PDF */
+.gdoc-img{max-width:100%;height:auto;border-radius:4px;margin:8px 0;display:block;}
+.gdoc-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:11px;}
+.gdoc-table th{background:#1B5EA6;color:#fff;padding:6px 10px;text-align:left;font-weight:600;}
+.gdoc-table td{border:1px solid #ccd6e8;padding:5px 10px;color:#1a2733;vertical-align:top;}
+.gdoc-table tr:nth-child(even) td{background:#f0f5fb;}
 </style>
 </head>
 <body>
@@ -508,9 +538,18 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
         <div class="fgrp full" id="dynFieldsSection" style="display:none"><div class="dyn-fields"><div class="dyn-field-label">自定义分类字段</div><div id="dynFields"></div></div></div>
         <div class="fgrp full"><label class="flbl">🧩 模块构成</label><textarea class="fta" id="f_module"></textarea></div>
         <div class="fgrp full"><label class="flbl">✨ 产品特点</label><input class="fi" id="f_feat"></div>
-        <div class="fgrp full"><label class="flbl">💡 产品介绍</label><textarea class="fta tall" id="f_intro"></textarea></div>
-        <div class="fgrp full"><label class="flbl">❗ 行业痛点</label><textarea class="fta" id="f_pain"></textarea></div>
-        <div class="fgrp full"><label class="flbl">🏆 销售亮点</label><textarea class="fta tall" id="f_high"></textarea></div>
+        <div class="fgrp full">
+          <label class="flbl">💡 产品介绍</label>
+          <div id="rich_f_intro"></div>
+        </div>
+        <div class="fgrp full">
+          <label class="flbl">❗ 行业痛点</label>
+          <div id="rich_f_pain"></div>
+        </div>
+        <div class="fgrp full">
+          <label class="flbl">🏆 销售亮点</label>
+          <div id="rich_f_high"></div>
+        </div>
         <div class="fgrp"><label class="flbl">🌍 应用场景</label><input class="fi" id="f_scene"></div>
         <div class="fgrp"><label class="flbl">编号</label><input class="fi" id="f_num"></div>
       </div>
@@ -1111,7 +1150,8 @@ function renderTable(){
   var tbody=document.getElementById('tbody');document.getElementById('cntBadge').textContent='共 '+filtered.length+' 条';
   if(!filtered.length){tbody.innerHTML='<tr><td colspan="'+cols.length+'" class="no-data">没有匹配的产品</td></tr>';return;}
   tbody.innerHTML='';
-  filtered.forEach(function(r){
+  var displayRows=sortKey?filtered.slice():filtered.slice().reverse();
+  displayRows.forEach(function(r){
     var tr=document.createElement('tr');tr.addEventListener('click',function(){openEdit(r._id);});
     cols.forEach(function(col){
       var td=document.createElement('td');
@@ -1141,7 +1181,26 @@ function doSortByKey(key){if(sortKey===key)sDir=-sDir;else{sortKey=key;sDir=1;}d
 function applySort(){filtered.sort(function(a,b){return(String(a[sortKey]||'')).localeCompare(String(b[sortKey]||''),'zh')*sDir;});}
 
 /* ── EDIT MODAL ─────────────────────────────────────────────────────────  */
-var STATIC_FMAP={f_num:'编号',f_date:'时间',f_type:'产品类型',f_model:'型号',f_pn:'料号',f_desc:'料号描述',f_perf:'计算与系统性能',f_stab:'工业稳定运行',f_env:'工业环境适应',f_conn:'连接与扩展',f_module:'模块构成',f_feat:'产品特点',f_intro:'产品介绍',f_pain:'行业痛点',f_high:'销售亮点',f_scene:'应用场景'};
+var STATIC_FMAP={f_num:'编号',f_date:'时间',f_type:'产品类型',f_model:'型号',f_pn:'料号',f_desc:'料号描述',f_perf:'计算与系统性能',f_stab:'工业稳定运行',f_env:'工业环境适应',f_conn:'连接与扩展',f_module:'模块构成',f_feat:'产品特点',f_scene:'应用场景'};
+// Rich-editor product fields: {fieldId: dataKey}
+var RICH_PROD_FIELDS={f_intro:'产品介绍',f_pain:'行业痛点',f_high:'销售亮点'};
+var _richProdEditors={}; // keyed by field id -> rich body element
+
+function initRichProdField(fid,lang,r){
+  var container=document.getElementById('rich_'+fid);if(!container)return;
+  container.innerHTML='';
+  var dataKey=RICH_PROD_FIELDS[fid];
+  var savedText=(r&&r[dataKey])||'';
+  var savedRich=(r&&r[dataKey+'_rich'])||[];
+  var rb=makeRichBody(lang,{body:savedText,rich:savedRich});
+  container.appendChild(rb);
+  _richProdEditors[fid]=rb;
+}
+
+function readRichProdField(fid){
+  var rb=_richProdEditors[fid];if(!rb)return{text:'',rich:[]};
+  var rd=readRichBody(rb);return{text:rd.body,rich:rd.rich};
+}
 function buildDynFields(r){var container=document.getElementById('dynFields');container.innerHTML='';var customCats=sel.cats.slice(4);var sec=document.getElementById('dynFieldsSection');if(!customCats.length){sec.style.display='none';return;}sec.style.display='';customCats.forEach(function(cat,i){var actualIdx=i+4;var grp=document.createElement('div');grp.className='fgrp full';grp.style.marginTop='10px';var lbl=document.createElement('label');lbl.className='flbl';var rb=document.createElement('span');rb.className='ref-btn';rb.textContent='引用卖点库 ↗';rb.addEventListener('click',function(){openRef(actualIdx,'dynf_'+actualIdx);});lbl.innerHTML=cat.emoji+' '+esc(cat.name)+' ';lbl.appendChild(rb);var ta=document.createElement('textarea');ta.className='fta tall';ta.id='dynf_'+actualIdx;ta.value=r?r[cat.name]||'':'';grp.appendChild(lbl);grp.appendChild(ta);container.appendChild(grp);});}
 
 function openEdit(id){
@@ -1151,6 +1210,7 @@ function openEdit(id){
   document.getElementById('editSub').textContent=r['料号']||'';
   document.getElementById('delBtn').style.display='';
   Object.keys(STATIC_FMAP).forEach(function(fid){var el=document.getElementById(fid);if(el)el.value=r[STATIC_FMAP[fid]]||'';});
+  Object.keys(RICH_PROD_FIELDS).forEach(function(fid){initRichProdField(fid,'zh',r);});
   buildDynFields(r);
   // Load solutions
   var sol=solutions[String(id)]||{};
@@ -1181,6 +1241,7 @@ function openAdd(){
   document.getElementById('editTitle').textContent='新增产品';document.getElementById('editSub').textContent='';
   document.getElementById('delBtn').style.display='none';
   initSolForm('zh',null);initSolForm('en',null);switchSolLang('zh');
+  Object.keys(RICH_PROD_FIELDS).forEach(function(fid){initRichProdField(fid,'zh',null);});
   buildDynFields(null);
   document.querySelectorAll('.modal-tab').forEach(function(t){t.classList.remove('active');});
   document.querySelectorAll('.modal-panel').forEach(function(p){p.classList.remove('active');});
@@ -1198,6 +1259,7 @@ function closeEdit(){
 }
 function saveProduct(){
   var data={};Object.keys(STATIC_FMAP).forEach(function(fid){var el=document.getElementById(fid);if(el)data[STATIC_FMAP[fid]]=el.value.trim();});
+  Object.keys(RICH_PROD_FIELDS).forEach(function(fid){var rd=readRichProdField(fid);data[RICH_PROD_FIELDS[fid]]=rd.text;data[RICH_PROD_FIELDS[fid]+'_rich']=rd.rich;});
   sel.cats.slice(4).forEach(function(cat,i){var el=document.getElementById('dynf_'+(i+4));if(el)data[cat.name]=el.value.trim();});
   var solZh=readSolForm('zh');var solEn=readSolForm('en');
   var pid;
@@ -1459,20 +1521,136 @@ function renderDocContent(){
 }
 
 /* ── DOC EDIT MODAL ─────────────────────────────────────────────────────── */
+// ── Rich content helpers ──
+function makeRichToolbar(lang,richBody){
+  var tb=document.createElement('div');tb.className='rich-toolbar';
+  // Image button
+  var imgBtn=document.createElement('button');imgBtn.className='rich-btn';imgBtn.textContent='🖼 '+(lang==='zh'?'插入图片':'Insert Image');imgBtn.type='button';
+  imgBtn.addEventListener('click',function(){
+    var inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+    inp.addEventListener('change',function(){
+      if(!inp.files[0])return;
+      var reader=new FileReader();
+      reader.onload=function(e){
+        var iw=document.createElement('div');iw.className='rich-img-wrap';iw.setAttribute('data-rtype','img');
+        var img=document.createElement('img');img.src=e.target.result;img.setAttribute('data-src',e.target.result);
+        var irm=document.createElement('button');irm.className='rich-img-rm';irm.textContent='✕';irm.type='button';
+        irm.addEventListener('click',function(){iw.remove();});
+        iw.appendChild(img);iw.appendChild(irm);richBody.appendChild(iw);
+      };reader.readAsDataURL(inp.files[0]);
+    });inp.click();
+  });tb.appendChild(imgBtn);
+  // Table button
+  var tblBtn=document.createElement('button');tblBtn.className='rich-btn';tblBtn.textContent='📊 '+(lang==='zh'?'插入表格':'Insert Table');tblBtn.type='button';
+  tblBtn.addEventListener('click',function(){
+    var tw=makeRichTableEl(lang,null);richBody.appendChild(tw);
+  });tb.appendChild(tblBtn);
+  return tb;
+}
+
+function makeRichTableEl(lang,data){
+  var rows=data&&data.rows||[['','',''],['','','']];
+  var headers=data&&data.headers||['','',''];
+  var tw=document.createElement('div');tw.className='rich-table-wrap';tw.setAttribute('data-rtype','table');
+  // Controls
+  var ctrl=document.createElement('div');ctrl.className='rich-table-ctrl';
+  function rebuildTable(){
+    var t=tw.querySelector('table');if(t)t.remove();
+    var tbl=document.createElement('table');tbl.className='rich-table';
+    var thead=document.createElement('thead');var htr=document.createElement('tr');
+    var thCols=tw._headers||['','',''];
+    thCols.forEach(function(h,ci){var th=document.createElement('th');th.contentEditable=true;th.textContent=h;th.addEventListener('input',function(){tw._headers[ci]=th.textContent;});htr.appendChild(th);});
+    thead.appendChild(htr);tbl.appendChild(thead);
+    var tbody2=document.createElement('tbody');
+    (tw._rows||[]).forEach(function(row,ri){var tr=document.createElement('tr');row.forEach(function(cell,ci){var td=document.createElement('td');td.contentEditable=true;td.textContent=cell;td.addEventListener('input',function(){tw._rows[ri][ci]=td.textContent;});tr.appendChild(td);});tbody2.appendChild(tr);});
+    tbl.appendChild(tbody2);tw.insertBefore(tbl,ctrl.nextSibling||null);tw.appendChild(tbl);
+  }
+  tw._headers=headers.slice();tw._rows=rows.map(function(r){return r.slice();});
+  var addRow=document.createElement('button');addRow.textContent=lang==='zh'?'＋ 行':'＋ Row';addRow.type='button';
+  addRow.addEventListener('click',function(){tw._rows.push(tw._rows[0]?tw._rows[0].map(function(){return'';}):[]);rebuildTable();});
+  var addCol=document.createElement('button');addCol.textContent=lang==='zh'?'＋ 列':'＋ Col';addCol.type='button';
+  addCol.addEventListener('click',function(){tw._headers.push('');tw._rows.forEach(function(r){r.push('');});rebuildTable();});
+  var rmRow=document.createElement('button');rmRow.textContent=lang==='zh'?'－ 行':'－ Row';rmRow.type='button';
+  rmRow.addEventListener('click',function(){if(tw._rows.length>1)tw._rows.pop();rebuildTable();});
+  var rmCol=document.createElement('button');rmCol.textContent=lang==='zh'?'－ 列':'－ Col';rmCol.type='button';
+  rmCol.addEventListener('click',function(){if(tw._headers.length>1){tw._headers.pop();tw._rows.forEach(function(r){r.pop();});}rebuildTable();});
+  var delTbl=document.createElement('button');delTbl.textContent='🗑';delTbl.type='button';delTbl.title=lang==='zh'?'删除表格':'Delete Table';
+  delTbl.addEventListener('click',function(){tw.remove();});
+  ctrl.appendChild(addRow);ctrl.appendChild(addCol);ctrl.appendChild(rmRow);ctrl.appendChild(rmCol);ctrl.appendChild(delTbl);
+  tw.appendChild(ctrl);rebuildTable();
+  return tw;
+}
+
+function makeRichBody(lang,sec){
+  var rb=document.createElement('div');rb.className='rich-body-area';rb.style.cssText='display:flex;flex-direction:column;gap:6px;';
+  rb.appendChild(makeRichToolbar(lang,rb));
+  // textarea for text
+  var ta=document.createElement('textarea');ta.className='fta';ta.style.minHeight='80px';
+  ta.placeholder=lang==='zh'?'区块文字内容（支持多行）…':'Text content (multi-line)…';
+  ta.value=sec&&sec.body||'';
+  rb._textEl=ta;rb.appendChild(ta);
+  // restore saved images and tables
+  if(sec&&sec.rich){sec.rich.forEach(function(item){
+    if(item.type==='img'){
+      var iw=document.createElement('div');iw.className='rich-img-wrap';iw.setAttribute('data-rtype','img');
+      var img=document.createElement('img');img.src=item.src;img.setAttribute('data-src',item.src);
+      var irm=document.createElement('button');irm.className='rich-img-rm';irm.textContent='✕';irm.type='button';
+      irm.addEventListener('click',function(){iw.remove();});
+      iw.appendChild(img);iw.appendChild(irm);rb.appendChild(iw);
+    }else if(item.type==='table'){
+      rb.appendChild(makeRichTableEl(lang,item));
+    }
+  });}
+  return rb;
+}
+
+function readRichBody(rb){
+  var body=rb._textEl?rb._textEl.value.trim():'';
+  var rich=[];
+  rb.querySelectorAll('[data-rtype]').forEach(function(el){
+    if(el.getAttribute('data-rtype')==='img'){var img=el.querySelector('img');if(img)rich.push({type:'img',src:img.getAttribute('data-src')||img.src});}
+    else if(el.getAttribute('data-rtype')==='table'){rich.push({type:'table',headers:el._headers||[],rows:el._rows||[[]]});}
+  });
+  return{body:body,rich:rich};
+}
+
+function makeDocSubItem(lang,sub){
+  var si=document.createElement('div');si.className='doc-sub-item';
+  var trow=document.createElement('div');trow.className='doc-sub-title-row';
+  var ti=document.createElement('input');ti.className='fi';
+  ti.placeholder=lang==='zh'?'子标题（如：1. 准备工作）':'Sub-heading (e.g. 1. Preparation)';
+  ti.value=sub&&sub.title||'';
+  var rm=document.createElement('button');rm.className='doc-sub-rm';rm.textContent='✕';rm.type='button';
+  rm.addEventListener('click',function(){si.remove();});
+  trow.appendChild(ti);trow.appendChild(rm);
+  si._titleEl=ti;
+  var rb=makeRichBody(lang,sub);si._richBody=rb;
+  si.appendChild(trow);si.appendChild(rb);
+  return si;
+}
+
 function makeDocSectionEl(lang,sec){
   var wrap=document.createElement('div');wrap.className='doc-section-wrap';
   var hdr=document.createElement('div');hdr.className='doc-section-hdr';
   var ti=document.createElement('input');ti.className='fi';
   ti.placeholder=lang==='zh'?'区块标题（如：流程说明）':'Section Title (e.g. Process Overview)';
   ti.value=sec&&sec.title||'';
-  var rm=document.createElement('button');rm.className='doc-section-rm';rm.textContent='✕';
+  var rm=document.createElement('button');rm.className='doc-section-rm';rm.textContent='✕';rm.type='button';
   rm.addEventListener('click',function(){wrap.remove();});
   hdr.appendChild(ti);hdr.appendChild(rm);
-  var body=document.createElement('textarea');body.className='fta tall';body.style.minHeight='100px';
-  body.placeholder=lang==='zh'?'区块内容（支持多行文本）…':'Section content (multi-line)…';
-  body.value=sec&&sec.body||'';
-  wrap._titleEl=ti;wrap._bodyEl=body;
-  wrap.appendChild(hdr);wrap.appendChild(body);
+  wrap._titleEl=ti;
+  // Legacy body textarea (first sub-item when no subs)
+  var subCont=document.createElement('div');subCont.className='doc-sub-items';
+  // Restore subs
+  var subs=sec&&sec.subs;
+  if(!subs&&sec&&sec.body){subs=[{title:'',body:sec.body,rich:sec.rich||[]}];}
+  if(!subs||!subs.length){subs=[{title:'',body:'',rich:[]}];}
+  subs.forEach(function(sub){subCont.appendChild(makeDocSubItem(lang,sub));});
+  var addSubBtn=document.createElement('button');addSubBtn.className='doc-sub-add';addSubBtn.type='button';
+  addSubBtn.textContent=lang==='zh'?'＋ 添加子标题 / 内容块':'＋ Add Sub-heading / Content Block';
+  addSubBtn.addEventListener('click',function(){subCont.appendChild(makeDocSubItem(lang,null));});
+  wrap._subCont=subCont;
+  wrap.appendChild(hdr);wrap.appendChild(subCont);wrap.appendChild(addSubBtn);
   return wrap;
 }
 
@@ -1498,8 +1676,16 @@ function readDocForm(lang){
   function v(id){var el=document.getElementById(p+id);return el?el.value.trim():'';}
   var sections=[];
   document.querySelectorAll('#'+p+'sections .doc-section-wrap').forEach(function(wrap){
-    var t=wrap._titleEl?wrap._titleEl.value.trim():'';var b=wrap._bodyEl?wrap._bodyEl.value.trim():'';
-    if(t||b)sections.push({title:t,body:b});
+    var t=wrap._titleEl?wrap._titleEl.value.trim():'';
+    var subs=[];
+    if(wrap._subCont){
+      wrap._subCont.querySelectorAll('.doc-sub-item').forEach(function(si){
+        var st=si._titleEl?si._titleEl.value.trim():'';
+        var rd=si._richBody?readRichBody(si._richBody):{body:'',rich:[]};
+        if(st||rd.body||(rd.rich&&rd.rich.length))subs.push({title:st,body:rd.body,rich:rd.rich});
+      });
+    }
+    if(t||subs.length)sections.push({title:t,subs:subs});
   });
   return{title:v('title'),subtitle:v('subtitle'),summary:v('summary'),date:v('date'),version:v('version'),note:v('note'),sections:sections};
 }
@@ -1529,6 +1715,24 @@ function saveDoc(){
 }
 
 /* ── BUILD DOC HTML ─────────────────────────────────────────────────────── */
+function buildRichHTML(rich){
+  var h='';
+  (rich||[]).forEach(function(item){
+    if(item.type==='img'&&item.src){
+      h+='<img class="gdoc-img" src="'+item.src+'">';
+    }else if(item.type==='table'&&item.headers){
+      h+='<table class="gdoc-table"><thead><tr>';
+      item.headers.forEach(function(hd){h+='<th>'+esc(hd)+'</th>';});
+      h+='</tr></thead><tbody>';
+      (item.rows||[]).forEach(function(row){
+        h+='<tr>';row.forEach(function(cell){h+='<td>'+esc(cell)+'</td>';});h+='</tr>';
+      });
+      h+='</tbody></table>';
+    }
+  });
+  return h;
+}
+
 function buildDocHTML(doc,lang){
   if(!doc||!doc.title)return '<div style="padding:40px;text-align:center;color:#999">'+(lang==='zh'?'暂无内容':'No content')+'</div>';
   var footer='Everly Xiong  |  sales11@cesipc.com  |  +86 198 6007 5914 (WeChat & WhatsApp)';
@@ -1546,15 +1750,33 @@ function buildDocHTML(doc,lang){
   html+='<div class="gdoc-meta">'+metaParts.join('')+'</div>';
   html+='<hr class="gdoc-divider">';
   if(doc.summary)html+='<div class="gdoc-summary">'+esc(doc.summary)+'</div>';
-  // Only render sections that have actual content
-  var filledSections=(doc.sections||[]).filter(function(sec){return (sec.title||'').trim()||(sec.body||'').trim();});
+  // Sections — support both old {body} and new {subs:[]} format
+  var filledSections=(doc.sections||[]).filter(function(sec){
+    if((sec.title||'').trim())return true;
+    if(sec.subs&&sec.subs.some(function(s){return(s.title||s.body||'').trim()||(s.rich&&s.rich.length);}))return true;
+    if((sec.body||'').trim())return true;
+    return false;
+  });
   filledSections.forEach(function(sec){
     var num=secNums[si++]||String(si);
     html+='<div class="gdoc-sec-hdr"><span class="gdoc-sec-num">'+num+'</span><span class="gdoc-sec-title">'+esc(sec.title||'')+'</span></div>';
-    if((sec.body||'').trim()){
-      // Convert newlines to <br> so long text wraps fully in PDF without being clipped
+    // New format: subs array
+    if(sec.subs&&sec.subs.length){
+      sec.subs.forEach(function(sub){
+        if((sub.title||'').trim()){
+          html+='<div style="font-size:11.5px;font-weight:700;color:#1B5EA6;margin:10px 0 5px;">'+esc(sub.title)+'</div>';
+        }
+        if((sub.body||'').trim()){
+          var bodyHtml=esc(sub.body).replace(/\n/g,'<br>');
+          html+='<div class="gdoc-sec-body">'+bodyHtml+'</div>';
+        }
+        if(sub.rich&&sub.rich.length){html+=buildRichHTML(sub.rich);}
+      });
+    } else if((sec.body||'').trim()){
+      // Legacy single-body format
       var bodyHtml=esc(sec.body).replace(/\n/g,'<br>');
       html+='<div class="gdoc-sec-body">'+bodyHtml+'</div>';
+      if(sec.rich&&sec.rich.length){html+=buildRichHTML(sec.rich);}
     }
   });
   if(doc.note){var nl=lang==='zh'?'备注':'Notes';html+='<div class="gdoc-sec-hdr" style="margin-top:22px"><span class="gdoc-sec-num" style="color:#6B7E94">※</span><span class="gdoc-sec-title" style="color:#6B7E94">'+nl+'</span></div><div class="gdoc-sec-body" style="color:#6B7E94;font-size:10px">'+esc(doc.note)+'</div>';}
@@ -1591,7 +1813,7 @@ function exportDocPdf(did,lang){
   pa.innerHTML=hdr+buildDocHTML(d,lang)+ftr;pa.style.display='block';
   var old=document.getElementById('_pso');if(old)old.remove();
   var ps=document.createElement('style');ps.id='_pso';
-  ps.textContent='@page{size:A4;margin:24mm 16mm 22mm 16mm;}@media print{html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}body{margin:0!important;}body > *:not(#printArea):not(script):not(style){display:none!important;}.sol-print-header{display:flex!important;position:fixed;top:0;left:0;right:0;height:12mm;align-items:center;justify-content:space-between;padding:0 16mm;box-sizing:border-box;font-family:Arial,sans-serif;font-size:8pt;font-weight:600;color:#0C2340;border-bottom:1pt solid #0C2340;background:#fff;white-space:nowrap;overflow:hidden;}.sol-ph-left{overflow:hidden;text-overflow:ellipsis;max-width:70%;}.sol-print-footer{display:flex!important;position:fixed;bottom:0;left:0;right:0;height:12mm;align-items:center;justify-content:center;padding:0 16mm;box-sizing:border-box;font-family:Arial,sans-serif;font-size:8pt;color:#0C2340;border-top:1pt solid #0C2340;background:#fff;}#printArea{display:block!important;background:#fff;}.gdoc{padding:0!important;margin:0!important;font-size:9.5pt;line-height:1.65;overflow:visible!important;}.gdoc-title{font-size:20pt;margin-bottom:4pt;}.gdoc-subtitle{font-size:12pt;margin-bottom:4pt;}.gdoc-sec-hdr{margin-top:12pt;margin-bottom:6pt;page-break-after:avoid;}.gdoc-sec-body{overflow:visible!important;max-height:none!important;white-space:pre-wrap;word-break:break-word;}.gdoc-footer{display:none!important;}}';
+  ps.textContent='@page{size:A4;margin:30mm 16mm 24mm 16mm;}@media print{html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}body{margin:0!important;}body > *:not(#printArea):not(script):not(style){display:none!important;}.sol-print-header{display:flex!important;position:fixed;top:0;left:0;right:0;height:14mm;align-items:center;justify-content:space-between;padding:0 16mm;box-sizing:border-box;font-family:Arial,sans-serif;font-size:8pt;font-weight:600;color:#0C2340;border-bottom:1pt solid #0C2340;background:#fff;white-space:nowrap;overflow:hidden;}.sol-ph-left{overflow:hidden;text-overflow:ellipsis;max-width:70%;}.sol-print-footer{display:flex!important;position:fixed;bottom:0;left:0;right:0;height:12mm;align-items:center;justify-content:center;padding:0 16mm;box-sizing:border-box;font-family:Arial,sans-serif;font-size:8pt;color:#0C2340;border-top:1pt solid #0C2340;background:#fff;}#printArea{display:block!important;background:#fff;padding-top:4mm;}.gdoc{padding:0!important;margin:0!important;font-size:9.5pt;line-height:1.65;overflow:visible!important;}.gdoc-title{font-size:20pt;margin-bottom:4pt;}.gdoc-subtitle{font-size:12pt;margin-bottom:4pt;}.gdoc-sec-hdr{margin-top:12pt;margin-bottom:6pt;page-break-after:avoid;}.gdoc-sec-body{overflow:visible!important;max-height:none!important;white-space:pre-wrap;word-break:break-word;}.gdoc-img{max-width:100%!important;height:auto!important;}.gdoc-table{width:100%!important;font-size:8.5pt!important;}.gdoc-footer{display:none!important;}}';
   document.head.appendChild(ps);
   setTimeout(function(){window.print();setTimeout(function(){pa.style.display='none';pa.innerHTML='';var s=document.getElementById('_pso');if(s)s.remove();},1000);},250);
 }
