@@ -291,7 +291,7 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
 
 /* Generic Doc PDF style */
 .gdoc{font-family:'Noto Sans SC','Arial',sans-serif;color:#1a2733;font-size:13.5px;line-height:1.75;background:#fff;padding:28px 36px 36px;}
-.gdoc-title{font-size:26px;font-weight:700;color:#0C2340;line-height:1.2;margin-bottom:6px;}
+.gdoc-title{font-size:34px;font-weight:700;color:#0C2340;line-height:1.2;margin-bottom:6px;}
 .gdoc-subtitle{font-size:15px;font-weight:600;color:#1B5EA6;margin-bottom:6px;}
 .gdoc-meta{font-size:10px;color:#6B7E94;margin-bottom:20px;display:flex;gap:16px;flex-wrap:wrap;}
 .gdoc-divider{border:none;border-top:2.5px solid #1B5EA6;margin:18px 0 14px;}
@@ -1424,7 +1424,54 @@ function exportSolPdf(lang) {
 }
 
 /* ── SELECTION ──────────────────────────────────────────────────────── */
-function renderSidebar(){var list=document.getElementById('catList');list.innerHTML='';sel.cats.forEach(function(cat,i){var cnt=0;sel.items.forEach(function(it){if((it[cat.name]||'').trim())cnt++;});var btn=document.createElement('button');btn.className='cat-btn'+(i===curCat?' active':'');btn.innerHTML='<span>'+cat.emoji+'</span><span style="flex:1;text-align:left">'+esc(cat.name)+'</span><span class="cpill">'+cnt+'</span><span class="cat-btn-actions"><button class="cat-action" title="重命名">✏</button>'+(i>0?'<button class="cat-action" title="上移">↑</button>':'')+(i<sel.cats.length-1?'<button class="cat-action" title="下移">↓</button>':'')+(i>=4?'<button class="cat-action danger" title="删除">✕</button>':'')+'</span>';(function(idx){btn.addEventListener('click',function(e){if(e.target.closest('.cat-btn-actions'))return;switchCat(idx);});var actions=btn.querySelectorAll('.cat-action');var ai=0;actions[ai++].addEventListener('click',function(e){e.stopPropagation();renameCat(idx);});if(i>0)actions[ai++].addEventListener('click',function(e){e.stopPropagation();moveCat(idx,-1);});if(i<sel.cats.length-1)actions[ai++].addEventListener('click',function(e){e.stopPropagation();moveCat(idx,1);});if(i>=4)actions[ai++].addEventListener('click',function(e){e.stopPropagation();deleteCat(idx);});})(i);list.appendChild(btn);});}
+function renderSidebar(){var list=document.getElementById('catList');list.innerHTML='';sel.cats.forEach(function(cat,i){var cnt=0;sel.items.forEach(function(it){if((it[cat.name]||'').trim())cnt++;});
+  var inTable=i<4||!cat.hideFromTable;
+  var btn=document.createElement('button');btn.className='cat-btn'+(i===curCat?' active':'');
+  var toggleTitle=inTable?'当前：显示在产品总结表（点击隐藏）':'当前：不显示在产品总结表（点击显示）';
+  var toggleIcon=inTable?'📋':'👁';
+  btn.innerHTML='<span>'+cat.emoji+'</span><span style="flex:1;text-align:left">'+esc(cat.name)+'</span>'
+    +(i>=4?'<span class="cat-tbl-badge" title="'+toggleTitle+'" style="font-size:11px;padding:1px 5px;border-radius:4px;margin-right:3px;background:'+(inTable?'rgba(67,217,160,.15)':'rgba(255,255,255,.06)')+';color:'+(inTable?'var(--acc2)':'var(--txt3)')+'">'+toggleIcon+'</span>':'')
+    +'<span class="cpill">'+cnt+'</span>'
+    +'<span class="cat-btn-actions">'
+    +'<button class="cat-action" title="重命名">✏</button>'
+    +(i>=4?'<button class="cat-action" title="'+(inTable?'从产品总结表移除':'添加到产品总结表')+'">'+toggleIcon+'</button>':'')
+    +(i>0?'<button class="cat-action" title="上移">↑</button>':'')
+    +(i<sel.cats.length-1?'<button class="cat-action" title="下移">↓</button>':'')
+    +(i>=4?'<button class="cat-action danger" title="删除">✕</button>':'')
+    +'</span>';
+  (function(idx,cat,inTbl){
+    btn.addEventListener('click',function(e){if(e.target.closest('.cat-btn-actions'))return;switchCat(idx);});
+    var actions=btn.querySelectorAll('.cat-action');var ai=0;
+    // rename
+    actions[ai++].addEventListener('click',function(e){e.stopPropagation();renameCat(idx);});
+    // toggle table visibility (only for custom cats idx>=4)
+    if(idx>=4){
+      actions[ai++].addEventListener('click',function(e){
+        e.stopPropagation();
+        var c=sel.cats[idx];
+        var nowHidden=!!c.hideFromTable;
+        if(nowHidden){
+          // show in table
+          c.hideFromTable=false;
+          if(visibleCols.indexOf(c.name)<0)visibleCols.push(c.name);
+          toast('「'+c.name+'」已添加到产品总结表 📋');
+        }else{
+          // hide from table
+          c.hideFromTable=true;
+          var vi=visibleCols.indexOf(c.name);if(vi>=0)visibleCols.splice(vi,1);
+          toast('「'+c.name+'」已从产品总结表移除');
+        }
+        buildColConfig();persist();renderSidebar();renderSel();renderTable();
+      });
+    }
+    // move up
+    if(idx>0)actions[ai++].addEventListener('click',function(e){e.stopPropagation();moveCat(idx,-1);});
+    // move down
+    if(idx<sel.cats.length-1)actions[ai++].addEventListener('click',function(e){e.stopPropagation();moveCat(idx,1);});
+    // delete
+    if(idx>=4)actions[ai++].addEventListener('click',function(e){e.stopPropagation();deleteCat(idx);});
+  })(i,cat,inTable);
+  list.appendChild(btn);});}
 function switchCat(idx){curCat=idx;renderSidebar();renderSel();}
 function showAddCatForm(){openMini('新增分类','<div style="display:flex;flex-direction:column;gap:10px;"><div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">分类名称</label><input id="miniCatName" class="fi" placeholder="如：售后与支持"></div><div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">图标 Emoji</label><input id="miniCatEmoji" class="fi" placeholder="如 🔧 💼 📊" style="font-size:18px;"></div><div style="background:rgba(91,141,238,.08);border:1px solid rgba(91,141,238,.2);border-radius:7px;padding:10px 12px;"><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:6px;font-weight:600;">📋 显示在产品学习总结表</label><div style="display:flex;gap:12px;"><label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;"><input type="radio" name="miniCatShow" value="yes" checked style="accent-color:var(--acc)"> 显示（可在表格查看此分类字段）</label><label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;"><input type="radio" name="miniCatShow" value="no" style="accent-color:var(--acc)"> 不显示（仅在卖点库中使用）</label></div></div></div>',function(){var name=document.getElementById('miniCatName').value.trim();var emoji=document.getElementById('miniCatEmoji').value.trim()||'📌';if(!name){toast('请输入分类名称');return false;}if(sel.cats.some(function(c){return c.name===name;})){toast('分类名称已存在');return false;}var showInTable=document.querySelector('input[name="miniCatShow"]:checked').value==='yes';var color=EXTRA_COLORS[(sel.cats.length-4)%EXTRA_COLORS.length];sel.cats.push({name:name,emoji:emoji,color:color,hideFromTable:!showInTable});sel.items.forEach(function(it){it[name]='';});sel.sub_headers[name]='';if(showInTable)visibleCols.push(name);buildColConfig();persist();curCat=sel.cats.length-1;renderSidebar();renderSel();renderTable();toast('已新增：'+name+(showInTable?'（已加入产品表）':'（仅卖点库）'));return true;});setTimeout(function(){var el=document.getElementById('miniCatName');if(el)el.focus();},100);}
 function renameCat(idx){var cat=sel.cats[idx];openMini('重命名分类','<div style="display:flex;flex-direction:column;gap:10px;"><div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">新名称</label><input id="miniRename" class="fi" value="'+esc(cat.name)+'"></div><div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">图标</label><input id="miniEmoji" class="fi" value="'+esc(cat.emoji)+'" style="font-size:18px;"></div></div>',function(){var newName=document.getElementById('miniRename').value.trim();var newEmoji=document.getElementById('miniEmoji').value.trim()||cat.emoji;if(!newName){toast('名称不能为空');return false;}if(newName!==cat.name&&sel.cats.some(function(c){return c.name===newName;})){toast('名称已存在');return false;}var oldName=cat.name;sel.items.forEach(function(it){it[newName]=it[oldName]||'';if(newName!==oldName)delete it[oldName];});if(sel.sub_headers[oldName]!==undefined){sel.sub_headers[newName]=sel.sub_headers[oldName];if(newName!==oldName)delete sel.sub_headers[oldName];}var ci=visibleCols.indexOf(oldName);if(ci>=0)visibleCols[ci]=newName;if(colWidths[oldName]!==undefined){colWidths[newName]=colWidths[oldName];delete colWidths[oldName];}cat.name=newName;cat.emoji=newEmoji;buildColConfig();persist();renderSidebar();renderSel();renderTable();toast('已重命名');return true;});setTimeout(function(){var el=document.getElementById('miniRename');if(el){el.focus();el.select();}},100);}
@@ -1487,8 +1534,19 @@ function renderDocSidebar(){
     var cnt=docs.filter(function(d){return d.cat===cat.name;}).length;
     var btn=document.createElement('button');
     btn.className='cat-btn'+(i===curDocCat?' active':'');
-    btn.innerHTML='<span>'+cat.emoji+'</span><span style="flex:1;text-align:left">'+esc(cat.name)+'</span><span class="cpill">'+cnt+'</span>';
-    (function(idx){btn.addEventListener('click',function(){curDocCat=idx;renderDocSidebar();renderDocContent();});})(i);
+    btn.innerHTML='<span>'+cat.emoji+'</span>'
+      +'<span style="flex:1;text-align:left">'+esc(cat.name)+'</span>'
+      +'<span class="cpill">'+cnt+'</span>'
+      +'<span class="cat-btn-actions"><button class="cat-action" title="编辑分类">✏</button></span>';
+    (function(idx){
+      btn.addEventListener('click',function(e){
+        if(e.target.closest('.cat-btn-actions'))return;
+        curDocCat=idx;renderDocSidebar();renderDocContent();
+      });
+      btn.querySelector('.cat-action').addEventListener('click',function(e){
+        e.stopPropagation();showEditDocCatForm(idx);
+      });
+    })(i);
     list.appendChild(btn);
   });
 }
@@ -1881,7 +1939,6 @@ function buildDocHTML(doc,lang){
   var footer='Everly Xiong  |  sales11@cesipc.com  |  +86 198 6007 5914 (WeChat & WhatsApp)';
   var today=new Date();var mm=today.getMonth()+1;var dd=today.getDate();
   var dateStr=doc.date||(today.getFullYear()+'-'+(mm<10?'0':'')+mm+'-'+(dd<10?'0':'')+dd);
-  var secNums=lang==='zh'?['一','二','三','四','五','六','七','八','九','十']:['1.','2.','3.','4.','5.','6.','7.','8.','9.','10.'];
   var si=0;
   var html='<div class="gdoc">';
   html+='<div class="gdoc-title">'+esc(doc.title)+'</div>';
@@ -1901,8 +1958,8 @@ function buildDocHTML(doc,lang){
     return false;
   });
   filledSections.forEach(function(sec){
-    var num=secNums[si++]||String(si);
-    html+='<div class="gdoc-sec-hdr"><span class="gdoc-sec-num">'+num+'</span><span class="gdoc-sec-title">'+esc(sec.title||'')+'</span></div>';
+    si++;
+    html+='<div class="gdoc-sec-hdr"><span class="gdoc-sec-title">'+esc(sec.title||'')+'</span></div>';
     // New format: subs array
     if(sec.subs&&sec.subs.length){
       sec.subs.forEach(function(sub){
@@ -1961,9 +2018,91 @@ function exportDocPdf(did,lang){
   pa.innerHTML=hdr+buildDocHTML(d,lang)+ftr;pa.style.display='block';
   var old=document.getElementById('_pso');if(old)old.remove();
   var ps=document.createElement('style');ps.id='_pso';
-  ps.textContent='@page{size:A4;margin:22mm 16mm 22mm 16mm;}@media print{html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}body{margin:0!important;}body > *:not(#printArea):not(script):not(style){display:none!important;}.sol-print-header{display:flex!important;position:fixed;top:0;left:0;right:0;height:10mm;align-items:center;justify-content:space-between;padding:0 16mm;box-sizing:border-box;font-family:Arial,sans-serif;font-size:7.5pt;font-weight:600;color:#0C2340;border-bottom:1pt solid #0C2340;background:#fff;white-space:nowrap;overflow:hidden;}.sol-ph-left{overflow:hidden;text-overflow:ellipsis;max-width:70%;}.sol-print-footer{display:flex!important;position:fixed;bottom:0;left:0;right:0;height:10mm;align-items:center;justify-content:center;padding:0 16mm;box-sizing:border-box;font-family:Arial,sans-serif;font-size:7.5pt;color:#0C2340;border-top:1pt solid #0C2340;background:#fff;}#printArea{display:block!important;background:#fff;}.gdoc{padding:0!important;margin:0!important;font-size:9.5pt;line-height:1.65;overflow:visible!important;}.gdoc-title{font-size:20pt;margin-bottom:4pt;}.gdoc-subtitle{font-size:12pt;margin-bottom:4pt;}.gdoc-sec-hdr{margin-top:12pt;margin-bottom:6pt;page-break-after:avoid;}.gdoc-sec-body{overflow:visible!important;max-height:none!important;white-space:pre-wrap;word-break:break-word;}.gdoc-img{max-width:100%!important;height:auto!important;page-break-inside:avoid;}.gdoc-table{width:100%!important;font-size:8.5pt!important;page-break-inside:avoid;}.gdoc-footer{display:none!important;}}';
+  ps.textContent='@page{size:A4;margin:22mm 16mm 22mm 16mm;}@media print{html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}body{margin:0!important;}body > *:not(#printArea):not(script):not(style){display:none!important;}.sol-print-header{display:flex!important;position:fixed;top:0;left:0;right:0;height:10mm;align-items:center;justify-content:space-between;padding:0 16mm;box-sizing:border-box;font-family:Arial,sans-serif;font-size:7.5pt;font-weight:600;color:#0C2340;border-bottom:1pt solid #0C2340;background:#fff;white-space:nowrap;overflow:hidden;}.sol-ph-left{overflow:hidden;text-overflow:ellipsis;max-width:70%;}.sol-print-footer{display:flex!important;position:fixed;bottom:0;left:0;right:0;height:10mm;align-items:center;justify-content:center;padding:0 16mm;box-sizing:border-box;font-family:Arial,sans-serif;font-size:7.5pt;color:#0C2340;border-top:1pt solid #0C2340;background:#fff;}#printArea{display:block!important;background:#fff;}.gdoc{padding:0!important;margin:0!important;font-size:9.5pt;line-height:1.65;overflow:visible!important;}.gdoc-title{font-size:26pt;margin-bottom:4pt;}.gdoc-subtitle{font-size:12pt;margin-bottom:4pt;}.gdoc-sec-hdr{margin-top:12pt;margin-bottom:6pt;page-break-after:avoid;}.gdoc-sec-body{overflow:visible!important;max-height:none!important;white-space:pre-wrap;word-break:break-word;}.gdoc-img{max-width:100%!important;height:auto!important;page-break-inside:avoid;}.gdoc-table{width:100%!important;font-size:8.5pt!important;page-break-inside:avoid;}.gdoc-footer{display:none!important;}}';
   document.head.appendChild(ps);
   setTimeout(function(){window.print();setTimeout(function(){pa.style.display='none';pa.innerHTML='';var s=document.getElementById('_pso');if(s)s.remove();},1000);},250);
+}
+
+/* ── DOC CATEGORY MANAGEMENT ───────────────────────────────────────────── */
+var DOC_CAT_ICONS=['📄','✅','🏢','🔧','💼','📊','📝','🗂','📌','💡','🔍','🌐','📋','🧪','🛡','⚙️','📦','🚀','🎯','📈'];
+function showAddDocCatForm(){
+  openMini('新增资料分类',
+    '<div style="display:flex;flex-direction:column;gap:12px;">'+
+    '<div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">分类名称</label>'+
+    '<input id="miniDocCatName" class="fi" placeholder="如：产品手册、认证文件…"></div>'+
+    '<div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">图标</label>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:var(--sur2);border-radius:6px;border:1px solid var(--bdr);" id="docCatIconPicker">'+
+    DOC_CAT_ICONS.map(function(ic,i){return '<span data-icon="'+ic+'" style="font-size:20px;cursor:pointer;padding:4px 6px;border-radius:5px;transition:background .12s;"'+(i===0?' class="dci-sel" style="font-size:20px;cursor:pointer;padding:4px 6px;border-radius:5px;background:var(--sur3);"':'')+'>'+ic+'</span>';}).join('')+
+    '</div></div></div>',
+    function(){
+      var name=document.getElementById('miniDocCatName').value.trim();
+      if(!name){toast('请输入分类名称');return false;}
+      if(docCats.some(function(c){return c.name===name;})){toast('分类名称已存在');return false;}
+      var sel_icon=document.querySelector('#docCatIconPicker .dci-sel');
+      var emoji=sel_icon?sel_icon.getAttribute('data-icon'):'📄';
+      var palette=['#5b8dee','#43d9a0','#f0a84a','#c678dd','#e06c75','#56b6c2','#98c379','#d19a66'];
+      var color=palette[docCats.length%palette.length];
+      docCats.push({name:name,emoji:emoji,color:color});
+      persistDocs();
+      curDocCat=docCats.length-1;
+      renderDocSidebar();renderDocContent();
+      toast('已新增资料分类：'+name);
+      return true;
+    }
+  );
+  // Wire up icon picker after mini modal is shown
+  setTimeout(function(){
+    var picker=document.getElementById('docCatIconPicker');
+    if(!picker)return;
+    picker.querySelectorAll('span').forEach(function(sp){
+      sp.addEventListener('click',function(){
+        picker.querySelectorAll('span').forEach(function(s){s.classList.remove('dci-sel');s.style.background='';});
+        sp.classList.add('dci-sel');sp.style.background='var(--sur3)';
+      });
+    });
+  },50);
+}
+
+function showEditDocCatForm(idx){
+  var cat=docCats[idx];
+  openMini('编辑资料分类',
+    '<div style="display:flex;flex-direction:column;gap:12px;">'+
+    '<div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">分类名称</label>'+
+    '<input id="miniDocCatRename" class="fi" value="'+esc(cat.name)+'"></div>'+
+    '<div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">图标</label>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:var(--sur2);border-radius:6px;border:1px solid var(--bdr);" id="docCatIconPicker2">'+
+    DOC_CAT_ICONS.map(function(ic){var sel=(ic===cat.emoji);return '<span data-icon="'+ic+'" class="'+(sel?'dci-sel':'')+'" style="font-size:20px;cursor:pointer;padding:4px 6px;border-radius:5px;'+(sel?'background:var(--sur3);':'')+'">'+ic+'</span>';}).join('')+
+    '</div></div>'+
+    (idx>0?'<button id="miniDocCatDel" style="padding:6px 12px;background:rgba(224,108,117,.12);color:var(--red);border:1px solid rgba(224,108,117,.25);border-radius:6px;cursor:pointer;font-family:inherit;font-size:12px;">🗑 删除此分类</button>':'')+
+    '</div>',
+    function(){
+      var newName=document.getElementById('miniDocCatRename').value.trim();
+      if(!newName){toast('名称不能为空');return false;}
+      var si=document.querySelector('#docCatIconPicker2 .dci-sel');
+      var newEmoji=si?si.getAttribute('data-icon'):cat.emoji;
+      var oldName=cat.name;
+      // rename docs
+      docs.forEach(function(d){if(d.cat===oldName)d.cat=newName;});
+      cat.name=newName;cat.emoji=newEmoji;
+      persistDocs();renderDocSidebar();renderDocContent();
+      toast('已更新');return true;
+    }
+  );
+  setTimeout(function(){
+    var picker=document.getElementById('docCatIconPicker2');
+    if(picker){picker.querySelectorAll('span').forEach(function(sp){sp.addEventListener('click',function(){picker.querySelectorAll('span').forEach(function(s){s.classList.remove('dci-sel');s.style.background='';});sp.classList.add('dci-sel');sp.style.background='var(--sur3)';});});}
+    var delBtn=document.getElementById('miniDocCatDel');
+    if(delBtn){delBtn.addEventListener('click',function(){
+      if(!confirm('删除分类「'+cat.name+'」？分类下的文档将移至第一个分类。'))return;
+      var first=docCats[0].name;
+      docs.forEach(function(d){if(d.cat===cat.name)d.cat=first;});
+      docCats.splice(idx,1);
+      if(curDocCat>=docCats.length)curDocCat=docCats.length-1;
+      persistDocs();renderDocSidebar();renderDocContent();
+      document.getElementById('miniOv').classList.remove('open');
+      toast('已删除分类');
+    });}
+  },50);
 }
 
 /* ── DOC EVENT INIT (appended to existing DOMContentLoaded) ─────────────── */
@@ -1988,6 +2127,7 @@ function exportDocPdf(did,lang){
     document.getElementById('closeDocEditBtn2').addEventListener('click',closeDocEdit);
     document.getElementById('delDocBtn').addEventListener('click',function(){if(!confirm('确认删除该文档？'))return;docs=docs.filter(function(x){return x._did!==editDocId;});persistDocs();renderDocSidebar();renderDocContent();closeDocEdit();toast('已删除');});
     document.getElementById('addDocBtn').addEventListener('click',function(){openDocEdit(null);});
+    document.getElementById('addDocCatBtn').addEventListener('click',showAddDocCatForm);
     document.getElementById('docSrch').addEventListener('input',function(){renderDocContent();});
     document.getElementById('closeDocViewBtn').addEventListener('click',closeDocView);
     document.getElementById('docViewOv').addEventListener('click',function(e){if(e.target===this)closeDocView();});
