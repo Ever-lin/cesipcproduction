@@ -307,13 +307,16 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
   @page {
     size: A4;
     margin: 18mm 16mm 18mm 16mm;
-    /* Remove browser default header/footer (URL, date, page number) */
     margin-top: 22mm;
     margin-bottom: 22mm;
   }
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
   body,html{background:#fff!important;margin:0!important;padding:0!important;}
-  .hdr,.tabs-bar,.main,.modal,.ref-drawer,.toast,.mini-ov,.ov{display:none!important;}
+  /* Hide all app UI AND any browser extension injected elements */
+  .hdr,.tabs-bar,.main,.modal,.ref-drawer,.toast,.mini-ov,.ov,
+  [class*="extension"],[id*="extension"],[class*="grammarly"],[id*="grammarly"],
+  [class*="loom"],[class*="chrome-extension"],[data-grammarly-shadow-root],
+  body > *:not(#printArea):not(script):not(style){display:none!important;}
   #printArea{display:block!important;background:#fff;}
   .sol-doc{padding:0;margin:0;}
   .sol-print-header{display:flex!important;}
@@ -462,8 +465,17 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
     <div><div class="sol-view-hdr-title" id="docViewTitle">文档预览</div><div class="sol-view-hdr-sub" id="docViewMeta"></div></div>
     <div class="sol-view-actions">
       <button class="btn btn-ghost" id="docLangToggleBtn" style="font-size:12px;display:none">切换语言</button>
+      <button class="btn btn-ghost" id="docHdrConfigBtn" style="font-size:12px" title="自定义页眉">⚙ 页眉</button>
       <button class="btn btn-ok" id="docViewExportBtn">⬇ 导出 PDF</button>
       <button class="mcls" id="closeDocViewBtn">✕</button>
+    </div>
+  </div>
+  <div id="docHdrConfigPanel" style="display:none;padding:10px 22px;border-bottom:1px solid #e5e7eb;background:#f0f4fa;">
+    <div style="font-size:11px;color:#666;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;">自定义 PDF 页眉</div>
+    <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+      <div style="flex:1;min-width:160px;"><label style="font-size:11px;color:#555;display:block;margin-bottom:3px;">左侧文字（默认：文档标题）</label><input id="docHdrLeft" placeholder="留空则使用默认" style="width:100%;padding:6px 10px;border:1px solid #ccc;border-radius:6px;font-size:12px;font-family:inherit;"></div>
+      <div style="flex:1;min-width:120px;"><label style="font-size:11px;color:#555;display:block;margin-bottom:3px;">右侧文字（默认：www.cesipc.com）</label><input id="docHdrRight" placeholder="留空则使用默认" style="width:100%;padding:6px 10px;border:1px solid #ccc;border-radius:6px;font-size:12px;font-family:inherit;"></div>
+      <button id="docHdrApplyBtn" style="padding:6px 14px;background:#5b8dee;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;">应用</button>
     </div>
   </div>
   <div class="sol-view-body" id="docViewBody"></div>
@@ -616,8 +628,17 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
     <div><div class="sol-view-hdr-title" id="solViewTitle">Solution 预览</div><div class="sol-view-hdr-sub" id="solViewMeta"></div></div>
     <div class="sol-view-actions">
       <button class="btn btn-ghost" id="solLangToggleBtn" style="font-size:12px;display:none">切换语言</button>
+      <button class="btn btn-ghost" id="solHdrConfigBtn" style="font-size:12px" title="自定义页眉">⚙ 页眉</button>
       <button class="btn btn-ok" id="solViewExportBtn">⬇ 导出 PDF</button>
       <button class="mcls" id="closeSolViewBtn">✕</button>
+    </div>
+  </div>
+  <div id="solHdrConfigPanel" style="display:none;padding:10px 22px;border-bottom:1px solid #e5e7eb;background:#f0f4fa;">
+    <div style="font-size:11px;color:#666;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;">自定义 PDF 页眉</div>
+    <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+      <div style="flex:1;min-width:160px;"><label style="font-size:11px;color:#555;display:block;margin-bottom:3px;">左侧文字（默认：产品型号 | 方案名）</label><input id="solHdrLeft" placeholder="留空则使用默认" style="width:100%;padding:6px 10px;border:1px solid #ccc;border-radius:6px;font-size:12px;font-family:inherit;"></div>
+      <div style="flex:1;min-width:120px;"><label style="font-size:11px;color:#555;display:block;margin-bottom:3px;">右侧文字（默认：www.cesipc.com）</label><input id="solHdrRight" placeholder="留空则使用默认" style="width:100%;padding:6px 10px;border:1px solid #ccc;border-radius:6px;font-size:12px;font-family:inherit;"></div>
+      <button id="solHdrApplyBtn" style="padding:6px 14px;background:#5b8dee;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;">应用</button>
     </div>
   </div>
   <div class="sol-view-body" id="solViewBody"></div>
@@ -720,11 +741,12 @@ function buildSolHTML(sol, lang) {
       }
       groups[g].forEach(function(f, i) {
         var num = String(i + 1).padStart(2, '0');
+        var bodyHtml = esc(f.body||'').replace(/\n/g,'<br>');
         html += '<div class="sol-card">'
           + '<div class="sol-card-num">' + esc(f.num || num) + '</div>'
           + '<div class="sol-card-body">'
           + '<div class="sol-card-title">' + esc(f.title || '') + '</div>'
-          + '<div class="sol-card-desc">' + esc(f.body || '') + '</div>'
+          + '<div class="sol-card-desc">' + bodyHtml + '</div>'
           + (f.quote ? '<div class="sol-card-quote">' + esc(f.quote) + '</div>' : '')
           + '</div></div>';
       });
@@ -858,23 +880,22 @@ function makeFeatureEl(f, lang, onRemove) {
   var rm = document.createElement('button'); rm.className='sol-rm-btn'; rm.textContent='✕';
   rm.addEventListener('click', function(){wrap.remove();});
   wrap.appendChild(rm);
-  function fi(lbl, id, val, ph, tall) {
+  // Use data-field attribute so values are always queryable without relying on JS object properties
+  function fi(lbl, field, val, ph, tall) {
     var g=document.createElement('div'); g.className='fgrp'; g.style.marginBottom='7px';
     var l=document.createElement('label'); l.className='flbl'; l.textContent=lbl;
     var el; if(tall){el=document.createElement('textarea');el.className='fta';el.rows=2;}else{el=document.createElement('input');el.className='fi';}
-    el.placeholder=ph||''; el.value=val||''; el.id=id;
+    el.placeholder=ph||''; el.value=val||''; el.setAttribute('data-field',field);
     g.appendChild(l); g.appendChild(el); return g;
   }
   var grpTitle = lang==='zh'?'卡片标题':'Title';
   var grpBody = lang==='zh'?'内容说明':'Description';
   var grpQuote = lang==='zh'?'引用语（斜体绿色）':'Quote (italic teal)';
   var grpGroup = lang==='zh'?'分组标题（如：环境防护）':'Group (e.g. Environmental)';
-  var pref = lang+'_feat_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)+'_';
-  wrap.appendChild(fi(grpGroup, pref+'group', f&&f.group, lang==='zh'?'环境防护 / 硬件性能':'Environmental Protection'));
-  wrap.appendChild(fi(grpTitle, pref+'title', f&&f.title, '01 全贴合屏（OCA工艺）— 从结构层消除凝露'));
-  wrap.appendChild(fi(grpBody, pref+'body', f&&f.body, lang==='zh'?'详细说明内容…':'Detailed description…', true));
-  wrap.appendChild(fi(grpQuote, pref+'quote', f&&f.quote, lang==='zh'?'「装上去不起雾，用一年还跟新的一样」':'"No fogging after installation…"'));
-  wrap._pref = pref;
+  wrap.appendChild(fi(grpGroup, 'group', f&&f.group, lang==='zh'?'环境防护 / 硬件性能':'Environmental Protection'));
+  wrap.appendChild(fi(grpTitle, 'title', f&&f.title, '01 全贴合屏（OCA工艺）— 从结构层消除凝露'));
+  wrap.appendChild(fi(grpBody, 'body', f&&f.body, lang==='zh'?'详细说明内容…':'Detailed description…', true));
+  wrap.appendChild(fi(grpQuote, 'quote', f&&f.quote, lang==='zh'?'「装上去不起雾，用一年还跟新的一样」':'"No fogging after installation…"'));
   return wrap;
 }
 
@@ -971,8 +992,7 @@ function readSolForm(lang) {
   // Features
   sol.features=[];
   document.querySelectorAll('#'+p+'feature_items .sol-feature-item').forEach(function(item){
-    var pref=item._pref;
-    function fv(sfx){var el=document.getElementById(pref+sfx);return el?el.value.trim():'';}
+    function fv(field){var el=item.querySelector('[data-field="'+field+'"]');return el?el.value.trim():'';}
     sol.features.push({group:fv('group'),title:fv('title'),body:fv('body'),quote:fv('quote')});
   });
 
@@ -1045,6 +1065,14 @@ document.addEventListener('DOMContentLoaded', function(){
   // Ref btns
   document.querySelectorAll('.ref-btn[data-catidx]').forEach(function(btn){
     btn.addEventListener('click',function(){var idx=parseInt(btn.getAttribute('data-catidx'));var fids=['f_perf','f_stab','f_env','f_conn'];openRef(idx,fids[idx]);});
+  });
+  document.getElementById('solHdrConfigBtn').addEventListener('click',function(){
+    var panel=document.getElementById('solHdrConfigPanel');
+    panel.style.display=panel.style.display==='none'?'block':'none';
+  });
+  document.getElementById('solHdrApplyBtn').addEventListener('click',function(){
+    document.getElementById('solHdrConfigPanel').style.display='none';
+    toast('页眉已更新，下次导出 PDF 时生效');
   });
   document.getElementById('addCatBtn').addEventListener('click',showAddCatForm);
   document.getElementById('closeRefBtn').addEventListener('click',closeRef);
@@ -1228,11 +1256,15 @@ function exportSolPdf(lang) {
   var solutionTitle=sol.solution||'Solution';
 
   var pa=document.getElementById('printArea');
+  var customLeft=document.getElementById('solHdrLeft')?document.getElementById('solHdrLeft').value.trim():'';
+  var customRight=document.getElementById('solHdrRight')?document.getElementById('solHdrRight').value.trim():'';
+  var hdrLeft=customLeft||(esc(productName)+(solutionTitle?' &nbsp;|&nbsp; '+esc(solutionTitle):''));
+  var hdrRight=customRight||'www.cesipc.com';
   // Build header and footer HTML (always shown in print via @page running elements isn't supported cross-browser,
   // so we use fixed-position divs that only appear in print via CSS)
   var headerHtml='<div class="sol-print-header" style="display:none">'
-    +'<span class="sol-ph-left">'+esc(productName)+(solutionTitle?' &nbsp;|&nbsp; '+esc(solutionTitle):'')+'</span>'
-    +'<span class="sol-ph-right">www.cesipc.com</span>'
+    +'<span class="sol-ph-left">'+hdrLeft+'</span>'
+    +'<span class="sol-ph-right">'+hdrRight+'</span>'
     +'</div>';
   var footerHtml='<div class="sol-print-footer" style="display:none">'
     +'<span>Everly Xiong  |  sales11@cesipc.com  |  +86 198 6007 5914 (WeChat & WhatsApp)</span>'
@@ -1247,18 +1279,17 @@ function exportSolPdf(lang) {
   ps.textContent=[
     '@page {',
     '  size: A4;',
-    '  margin: 20mm 16mm 20mm 16mm;',
+    '  margin: 26mm 16mm 22mm 16mm;',
     '}',
     '@media print {',
     '  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }',
-    /* Remove browser default header/footer by setting margin-top/bottom
-       large enough for our custom header/footer fixed divs */
     '  body { margin: 0 !important; }',
+    '  body > *:not(#printArea):not(script):not(style) { display: none !important; }',
     '  .sol-print-header {',
     '    display: flex !important;',
     '    position: fixed;',
     '    top: 0; left: 0; right: 0;',
-    '    height: 14mm;',
+    '    height: 12mm;',
     '    align-items: center;',
     '    justify-content: space-between;',
     '    padding: 0 16mm;',
@@ -1278,7 +1309,7 @@ function exportSolPdf(lang) {
     '    display: flex !important;',
     '    position: fixed;',
     '    bottom: 0; left: 0; right: 0;',
-    '    height: 14mm;',
+    '    height: 12mm;',
     '    align-items: center;',
     '    justify-content: center;',
     '    padding: 0 16mm;',
@@ -1322,7 +1353,7 @@ function exportSolPdf(lang) {
 /* ── SELECTION ──────────────────────────────────────────────────────── */
 function renderSidebar(){var list=document.getElementById('catList');list.innerHTML='';sel.cats.forEach(function(cat,i){var cnt=0;sel.items.forEach(function(it){if((it[cat.name]||'').trim())cnt++;});var btn=document.createElement('button');btn.className='cat-btn'+(i===curCat?' active':'');btn.innerHTML='<span>'+cat.emoji+'</span><span style="flex:1;text-align:left">'+esc(cat.name)+'</span><span class="cpill">'+cnt+'</span><span class="cat-btn-actions"><button class="cat-action" title="重命名">✏</button>'+(i>0?'<button class="cat-action" title="上移">↑</button>':'')+(i<sel.cats.length-1?'<button class="cat-action" title="下移">↓</button>':'')+(i>=4?'<button class="cat-action danger" title="删除">✕</button>':'')+'</span>';(function(idx){btn.addEventListener('click',function(e){if(e.target.closest('.cat-btn-actions'))return;switchCat(idx);});var actions=btn.querySelectorAll('.cat-action');var ai=0;actions[ai++].addEventListener('click',function(e){e.stopPropagation();renameCat(idx);});if(i>0)actions[ai++].addEventListener('click',function(e){e.stopPropagation();moveCat(idx,-1);});if(i<sel.cats.length-1)actions[ai++].addEventListener('click',function(e){e.stopPropagation();moveCat(idx,1);});if(i>=4)actions[ai++].addEventListener('click',function(e){e.stopPropagation();deleteCat(idx);});})(i);list.appendChild(btn);});}
 function switchCat(idx){curCat=idx;renderSidebar();renderSel();}
-function showAddCatForm(){openMini('新增分类','<div style="display:flex;flex-direction:column;gap:10px;"><div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">分类名称</label><input id="miniCatName" class="fi" placeholder="如：售后与支持"></div><div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">图标 Emoji</label><input id="miniCatEmoji" class="fi" placeholder="如 🔧 💼 📊" style="font-size:18px;"></div></div>',function(){var name=document.getElementById('miniCatName').value.trim();var emoji=document.getElementById('miniCatEmoji').value.trim()||'📌';if(!name){toast('请输入分类名称');return false;}if(sel.cats.some(function(c){return c.name===name;})){toast('分类名称已存在');return false;}var color=EXTRA_COLORS[(sel.cats.length-4)%EXTRA_COLORS.length];sel.cats.push({name:name,emoji:emoji,color:color});sel.items.forEach(function(it){it[name]='';});sel.sub_headers[name]='';visibleCols.push(name);buildColConfig();persist();curCat=sel.cats.length-1;renderSidebar();renderSel();renderTable();toast('已新增：'+name);return true;});setTimeout(function(){var el=document.getElementById('miniCatName');if(el)el.focus();},100);}
+function showAddCatForm(){openMini('新增分类','<div style="display:flex;flex-direction:column;gap:10px;"><div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">分类名称</label><input id="miniCatName" class="fi" placeholder="如：售后与支持"></div><div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">图标 Emoji</label><input id="miniCatEmoji" class="fi" placeholder="如 🔧 💼 📊" style="font-size:18px;"></div><div style="background:rgba(91,141,238,.08);border:1px solid rgba(91,141,238,.2);border-radius:7px;padding:10px 12px;"><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:6px;font-weight:600;">📋 显示在产品学习总结表</label><div style="display:flex;gap:12px;"><label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;"><input type="radio" name="miniCatShow" value="yes" checked style="accent-color:var(--acc)"> 显示（可在表格查看此分类字段）</label><label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;"><input type="radio" name="miniCatShow" value="no" style="accent-color:var(--acc)"> 不显示（仅在卖点库中使用）</label></div></div></div>',function(){var name=document.getElementById('miniCatName').value.trim();var emoji=document.getElementById('miniCatEmoji').value.trim()||'📌';if(!name){toast('请输入分类名称');return false;}if(sel.cats.some(function(c){return c.name===name;})){toast('分类名称已存在');return false;}var showInTable=document.querySelector('input[name="miniCatShow"]:checked').value==='yes';var color=EXTRA_COLORS[(sel.cats.length-4)%EXTRA_COLORS.length];sel.cats.push({name:name,emoji:emoji,color:color,hideFromTable:!showInTable});sel.items.forEach(function(it){it[name]='';});sel.sub_headers[name]='';if(showInTable)visibleCols.push(name);buildColConfig();persist();curCat=sel.cats.length-1;renderSidebar();renderSel();renderTable();toast('已新增：'+name+(showInTable?'（已加入产品表）':'（仅卖点库）'));return true;});setTimeout(function(){var el=document.getElementById('miniCatName');if(el)el.focus();},100);}
 function renameCat(idx){var cat=sel.cats[idx];openMini('重命名分类','<div style="display:flex;flex-direction:column;gap:10px;"><div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">新名称</label><input id="miniRename" class="fi" value="'+esc(cat.name)+'"></div><div><label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:4px;">图标</label><input id="miniEmoji" class="fi" value="'+esc(cat.emoji)+'" style="font-size:18px;"></div></div>',function(){var newName=document.getElementById('miniRename').value.trim();var newEmoji=document.getElementById('miniEmoji').value.trim()||cat.emoji;if(!newName){toast('名称不能为空');return false;}if(newName!==cat.name&&sel.cats.some(function(c){return c.name===newName;})){toast('名称已存在');return false;}var oldName=cat.name;sel.items.forEach(function(it){it[newName]=it[oldName]||'';if(newName!==oldName)delete it[oldName];});if(sel.sub_headers[oldName]!==undefined){sel.sub_headers[newName]=sel.sub_headers[oldName];if(newName!==oldName)delete sel.sub_headers[oldName];}var ci=visibleCols.indexOf(oldName);if(ci>=0)visibleCols[ci]=newName;if(colWidths[oldName]!==undefined){colWidths[newName]=colWidths[oldName];delete colWidths[oldName];}cat.name=newName;cat.emoji=newEmoji;buildColConfig();persist();renderSidebar();renderSel();renderTable();toast('已重命名');return true;});setTimeout(function(){var el=document.getElementById('miniRename');if(el){el.focus();el.select();}},100);}
 function moveCat(idx,dir){var ni=idx+dir;if(ni<0||ni>=sel.cats.length)return;var tmp=sel.cats[idx];sel.cats[idx]=sel.cats[ni];sel.cats[ni]=tmp;if(curCat===idx)curCat=ni;else if(curCat===ni)curCat=idx;persist();renderSidebar();renderSel();}
 function deleteCat(idx){if(idx<4){toast('默认分类不可删除');return;}var cat=sel.cats[idx];if(!confirm('删除分类「'+cat.name+'」？'))return;sel.items.forEach(function(it){delete it[cat.name];});delete sel.sub_headers[cat.name];var vi=visibleCols.indexOf(cat.name);if(vi>=0)visibleCols.splice(vi,1);sel.cats.splice(idx,1);if(curCat>=sel.cats.length)curCat=sel.cats.length-1;buildColConfig();persist();renderSidebar();renderSel();renderTable();toast('已删除');}
@@ -1508,13 +1539,23 @@ function buildDocHTML(doc,lang){
   var html='<div class="gdoc">';
   html+='<div class="gdoc-title">'+esc(doc.title)+'</div>';
   if(doc.subtitle)html+='<div class="gdoc-subtitle">'+esc(doc.subtitle)+'</div>';
-  html+='<div class="gdoc-meta">'+(dateStr?'<span>📅 '+esc(dateStr)+'</span>':'')+(doc.version?'<span>🏷 '+esc(doc.version)+'</span>':'')+'<span>CESIPC</span></div>';
+  var metaParts=[];
+  if(dateStr)metaParts.push('<span>📅 '+esc(dateStr)+'</span>');
+  if(doc.version)metaParts.push('<span>🏷 '+esc(doc.version)+'</span>');
+  metaParts.push('<span>CESIPC</span>');
+  html+='<div class="gdoc-meta">'+metaParts.join('')+'</div>';
   html+='<hr class="gdoc-divider">';
   if(doc.summary)html+='<div class="gdoc-summary">'+esc(doc.summary)+'</div>';
-  (doc.sections||[]).forEach(function(sec){
+  // Only render sections that have actual content
+  var filledSections=(doc.sections||[]).filter(function(sec){return (sec.title||'').trim()||(sec.body||'').trim();});
+  filledSections.forEach(function(sec){
     var num=secNums[si++]||String(si);
     html+='<div class="gdoc-sec-hdr"><span class="gdoc-sec-num">'+num+'</span><span class="gdoc-sec-title">'+esc(sec.title||'')+'</span></div>';
-    html+='<div class="gdoc-sec-body">'+esc(sec.body||'')+'</div>';
+    if((sec.body||'').trim()){
+      // Convert newlines to <br> so long text wraps fully in PDF without being clipped
+      var bodyHtml=esc(sec.body).replace(/\n/g,'<br>');
+      html+='<div class="gdoc-sec-body">'+bodyHtml+'</div>';
+    }
   });
   if(doc.note){var nl=lang==='zh'?'备注':'Notes';html+='<div class="gdoc-sec-hdr" style="margin-top:22px"><span class="gdoc-sec-num" style="color:#6B7E94">※</span><span class="gdoc-sec-title" style="color:#6B7E94">'+nl+'</span></div><div class="gdoc-sec-body" style="color:#6B7E94;font-size:10px">'+esc(doc.note)+'</div>';}
   html+='<div class="gdoc-footer">'+esc(footer)+'</div>';
@@ -1540,13 +1581,17 @@ function exportDocPdf(did,lang){
   if(did!==null&&did!==undefined){docs.forEach(function(x){if(x._did===did)docObj=x;});}
   var d=(editDocId!==null&&(did===null||did===undefined))?readDocForm(lang):(docObj&&docObj[lang])||{};
   var title=d.title||'CESIPC Document';
+  var customLeft=document.getElementById('docHdrLeft')?document.getElementById('docHdrLeft').value.trim():'';
+  var customRight=document.getElementById('docHdrRight')?document.getElementById('docHdrRight').value.trim():'';
+  var hdrLeft=customLeft||esc(title);
+  var hdrRight=customRight||'www.cesipc.com';
   var pa=document.getElementById('printArea');
-  var hdr='<div class="sol-print-header" style="display:none"><span class="sol-ph-left">'+esc(title)+'</span><span class="sol-ph-right">www.cesipc.com</span></div>';
+  var hdr='<div class="sol-print-header" style="display:none"><span class="sol-ph-left">'+hdrLeft+'</span><span class="sol-ph-right">'+hdrRight+'</span></div>';
   var ftr='<div class="sol-print-footer" style="display:none"><span>Everly Xiong  |  sales11@cesipc.com  |  +86 198 6007 5914 (WeChat &amp; WhatsApp)</span></div>';
   pa.innerHTML=hdr+buildDocHTML(d,lang)+ftr;pa.style.display='block';
   var old=document.getElementById('_pso');if(old)old.remove();
   var ps=document.createElement('style');ps.id='_pso';
-  ps.textContent='@page{size:A4;margin:20mm 16mm 20mm 16mm;}@media print{html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}body{margin:0!important;}.sol-print-header{display:flex!important;position:fixed;top:0;left:0;right:0;height:14mm;align-items:center;justify-content:space-between;padding:0 16mm;box-sizing:border-box;font-family:Arial,sans-serif;font-size:8pt;font-weight:600;color:#0C2340;border-bottom:1pt solid #0C2340;background:#fff;white-space:nowrap;overflow:hidden;}.sol-ph-left{overflow:hidden;text-overflow:ellipsis;max-width:70%;}.sol-print-footer{display:flex!important;position:fixed;bottom:0;left:0;right:0;height:14mm;align-items:center;justify-content:center;padding:0 16mm;box-sizing:border-box;font-family:Arial,sans-serif;font-size:8pt;color:#0C2340;border-top:1pt solid #0C2340;background:#fff;}#printArea{display:block!important;background:#fff;}.gdoc{padding:0!important;margin:0!important;font-size:9.5pt;line-height:1.65;}.gdoc-title{font-size:20pt;margin-bottom:4pt;}.gdoc-subtitle{font-size:12pt;margin-bottom:4pt;}.gdoc-sec-hdr{margin-top:12pt;margin-bottom:6pt;page-break-after:avoid;}.gdoc-sec-body{page-break-inside:avoid;}.gdoc-footer{display:none!important;}}';
+  ps.textContent='@page{size:A4;margin:24mm 16mm 22mm 16mm;}@media print{html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}body{margin:0!important;}body > *:not(#printArea):not(script):not(style){display:none!important;}.sol-print-header{display:flex!important;position:fixed;top:0;left:0;right:0;height:12mm;align-items:center;justify-content:space-between;padding:0 16mm;box-sizing:border-box;font-family:Arial,sans-serif;font-size:8pt;font-weight:600;color:#0C2340;border-bottom:1pt solid #0C2340;background:#fff;white-space:nowrap;overflow:hidden;}.sol-ph-left{overflow:hidden;text-overflow:ellipsis;max-width:70%;}.sol-print-footer{display:flex!important;position:fixed;bottom:0;left:0;right:0;height:12mm;align-items:center;justify-content:center;padding:0 16mm;box-sizing:border-box;font-family:Arial,sans-serif;font-size:8pt;color:#0C2340;border-top:1pt solid #0C2340;background:#fff;}#printArea{display:block!important;background:#fff;}.gdoc{padding:0!important;margin:0!important;font-size:9.5pt;line-height:1.65;overflow:visible!important;}.gdoc-title{font-size:20pt;margin-bottom:4pt;}.gdoc-subtitle{font-size:12pt;margin-bottom:4pt;}.gdoc-sec-hdr{margin-top:12pt;margin-bottom:6pt;page-break-after:avoid;}.gdoc-sec-body{overflow:visible!important;max-height:none!important;white-space:pre-wrap;word-break:break-word;}.gdoc-footer{display:none!important;}}';
   document.head.appendChild(ps);
   setTimeout(function(){window.print();setTimeout(function(){pa.style.display='none';pa.innerHTML='';var s=document.getElementById('_pso');if(s)s.remove();},1000);},250);
 }
@@ -1554,6 +1599,14 @@ function exportDocPdf(did,lang){
 /* ── DOC EVENT INIT (appended to existing DOMContentLoaded) ─────────────── */
 (function(){
   function docInit(){
+    document.getElementById('docHdrConfigBtn').addEventListener('click',function(){
+      var panel=document.getElementById('docHdrConfigPanel');
+      panel.style.display=panel.style.display==='none'?'block':'none';
+    });
+    document.getElementById('docHdrApplyBtn').addEventListener('click',function(){
+      document.getElementById('docHdrConfigPanel').style.display='none';
+      toast('页眉已更新，下次导出 PDF 时生效');
+    });
     document.getElementById('doc_zh_add_section').addEventListener('click',function(){document.getElementById('doc_zh_sections').appendChild(makeDocSectionEl('zh',null));});
     document.getElementById('doc_en_add_section').addEventListener('click',function(){document.getElementById('doc_en_sections').appendChild(makeDocSectionEl('en',null));});
     document.getElementById('docLangZh').addEventListener('click',function(){switchDocLang('zh');});
