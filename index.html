@@ -443,7 +443,8 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
         <button class="sol-lang-tab active" data-doclang="zh" id="docLangZh">🇨🇳 中文</button>
         <button class="sol-lang-tab" data-doclang="en" id="docLangEn">🌍 English</button>
       </div>
-      <div style="display:flex;gap:8px;">
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-ghost" id="translateDocBtn" style="font-size:12px;background:rgba(198,120,221,.1);color:var(--acc4);border-color:rgba(198,120,221,.28);">✨ 翻译至英文</button>
         <button class="btn btn-ghost" id="previewDocBtn" style="font-size:12px">👁 预览</button>
         <button class="btn btn-ok" id="exportDocBtn" style="font-size:12px">⬇ 导出 PDF</button>
       </div>
@@ -2106,6 +2107,110 @@ function showEditDocCatForm(idx){
 }
 
 /* ── DOC EVENT INIT (appended to existing DOMContentLoaded) ─────────────── */
+/* ── TRANSLATE DOC ZH → EN (Claude API) ──────────────────────────────── */
+async function translateDocToEn() {
+  var zhData = readDocForm('zh');
+  if (!zhData.title && !zhData.summary && !(zhData.sections && zhData.sections.length)) {
+    toast('请先填写中文内容再翻译'); return;
+  }
+  var btn = document.getElementById('translateDocBtn');
+  btn.disabled = true; btn.textContent = '⏳ 翻译中…';
+
+  // Build a structured JSON payload for Claude to translate
+  var payload = {
+    title: zhData.title,
+    subtitle: zhData.subtitle,
+    summary: zhData.summary,
+    note: zhData.note,
+    sections: (zhData.sections || []).map(function(sec) {
+      return {
+        title: sec.title,
+        subs: (sec.subs || []).map(function(sub) {
+          return {
+            title: sub.title,
+            body: sub.body,
+            blocks: (sub.blocks || []).map(function(b) {
+              if (b.type === 'text') return { type: 'text', text: b.text };
+              if (b.type === 'table') return {
+                type: 'table',
+                headers: b.headers,
+                rows: b.rows
+              };
+              return b; // img blocks: keep as-is
+            })
+          };
+        })
+      };
+    })
+  };
+
+  var systemPrompt = 'You are a professional translator. Translate the following JSON document fields from Chinese to English. Return ONLY valid JSON in exactly the same structure, with all text values translated. Do not add or remove any keys. For image blocks (type="img"), keep them unchanged. Preserve line breaks (\\n) in text fields.';
+
+  try {
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        messages: [{ role: 'user', content: 'Translate this document JSON:\n' + JSON.stringify(payload, null, 2) }],
+        system: systemPrompt
+      })
+    });
+    var data = await res.json();
+    var rawText = (data.content || []).map(function(c) { return c.text || ''; }).join('');
+    // Strip markdown code fences if present
+    rawText = rawText.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/i, '').trim();
+    var translated = JSON.parse(rawText);
+
+    // Build en sections data with blocks preserved
+    var enSections = (translated.sections || []).map(function(sec, si) {
+      var origSec = zhData.sections[si] || {};
+      return {
+        title: sec.title || '',
+        subs: (sec.subs || []).map(function(sub, subi) {
+          var origSub = (origSec.subs || [])[subi] || {};
+          // Merge translated blocks back, keeping img blocks from original
+          var translatedBlocks = (sub.blocks || []).map(function(b, bi) {
+            var origBlock = (origSub.blocks || [])[bi] || {};
+            if (b.type === 'img') return origBlock; // keep original img with src
+            return b;
+          });
+          // If no blocks but has body (legacy), convert
+          var finalBlocks = translatedBlocks.length ? translatedBlocks
+            : (sub.body ? [{ type: 'text', text: sub.body }] : []);
+          return {
+            title: sub.title || '',
+            body: sub.body || '',
+            rich: origSub.rich || [],
+            blocks: finalBlocks
+          };
+        })
+      };
+    });
+
+    // Fill EN form
+    initDocForm('en', {
+      title: translated.title || '',
+      subtitle: translated.subtitle || '',
+      summary: translated.summary || '',
+      note: translated.note || '',
+      date: zhData.date,
+      version: zhData.version,
+      sections: enSections
+    });
+
+    // Switch to EN tab so user sees the result
+    switchDocLang('en');
+    toast('✅ 翻译完成，已填入英文栏');
+  } catch(e) {
+    console.error(e);
+    toast('翻译失败，请重试');
+  } finally {
+    btn.disabled = false; btn.textContent = '✨ 翻译至英文';
+  }
+}
+
 (function(){
   function docInit(){
     document.getElementById('docHdrConfigBtn').addEventListener('click',function(){
@@ -2120,6 +2225,7 @@ function showEditDocCatForm(idx){
     document.getElementById('doc_en_add_section').addEventListener('click',function(){document.getElementById('doc_en_sections').appendChild(makeDocSectionEl('en',null));});
     document.getElementById('docLangZh').addEventListener('click',function(){switchDocLang('zh');});
     document.getElementById('docLangEn').addEventListener('click',function(){switchDocLang('en');});
+    document.getElementById('translateDocBtn').addEventListener('click',translateDocToEn);
     document.getElementById('previewDocBtn').addEventListener('click',function(){previewDoc(curDocLang);});
     document.getElementById('exportDocBtn').addEventListener('click',function(){exportDocPdf(null,curDocLang);});
     document.getElementById('saveDocBtn').addEventListener('click',saveDoc);
