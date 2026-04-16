@@ -895,7 +895,7 @@ function renderYearTabs(){
     var tab=document.createElement('div');
     tab.className='tab'+(y===curYear?' active':'');
     tab.setAttribute('data-year',String(y));
-    tab.textContent='📋 '+y+' 产品学习总结表';
+    tab.textContent='📋 产品学习总结表（'+y+'）';
     tab.addEventListener('click',function(){
       document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
       document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active');});
@@ -1191,8 +1191,6 @@ function renderTable(){
         td.addEventListener('click',function(e){e.stopPropagation();});
         var g=document.createElement('div');g.style.cssText='display:flex;gap:5px;';
         var eb=document.createElement('button');eb.className='btn btn-ghost';eb.style.cssText='padding:3px 9px;font-size:11px';eb.textContent='✏ 编辑';eb.addEventListener('click',function(){openEdit(r._id);});g.appendChild(eb);
-        var sol=solutions[String(r._id)];
-        if(sol&&(sol.zh||sol.en)){var sb=document.createElement('button');sb.className='btn btn-ok';sb.style.cssText='padding:3px 9px;font-size:11px';sb.textContent='📄';sb.title='查看 Solution';sb.addEventListener('click',function(){openSolQuick(r._id);});g.appendChild(sb);}
         td.appendChild(g);
       } else if(col.key==='产品类型'){
         var t=tc(r['产品类型']);td.innerHTML='<span class="tag '+t.cls+'">'+esc(r['产品类型']||'—')+'</span>';
@@ -1235,7 +1233,7 @@ function readRichProdField(fid){
   var rb=_richProdEditors[fid];if(!rb)return{text:'',rich:[]};
   var rd=readRichBody(rb);return{text:rd.body,rich:rd.rich};
 }
-function buildDynFields(r){var container=document.getElementById('dynFields');container.innerHTML='';var customCats=sel.cats.slice(4);var sec=document.getElementById('dynFieldsSection');if(!customCats.length){sec.style.display='none';return;}sec.style.display='';customCats.forEach(function(cat,i){var actualIdx=i+4;var grp=document.createElement('div');grp.className='fgrp full';grp.style.marginTop='10px';var lbl=document.createElement('label');lbl.className='flbl';var rb=document.createElement('span');rb.className='ref-btn';rb.textContent='引用卖点库 ↗';rb.addEventListener('click',function(){openRef(actualIdx,'dynf_'+actualIdx);});lbl.innerHTML=cat.emoji+' '+esc(cat.name)+' ';lbl.appendChild(rb);var ta=document.createElement('textarea');ta.className='fta tall';ta.id='dynf_'+actualIdx;ta.value=r?r[cat.name]||'':'';grp.appendChild(lbl);grp.appendChild(ta);container.appendChild(grp);});}
+function buildDynFields(r){var container=document.getElementById('dynFields');container.innerHTML='';var customCats=sel.cats.slice(4).filter(function(cat){return !cat.hideFromTable;});var sec=document.getElementById('dynFieldsSection');if(!customCats.length){sec.style.display='none';return;}sec.style.display='';customCats.forEach(function(cat){var actualIdx=sel.cats.indexOf(cat);var grp=document.createElement('div');grp.className='fgrp full';grp.style.marginTop='10px';var lbl=document.createElement('label');lbl.className='flbl';var rb=document.createElement('span');rb.className='ref-btn';rb.textContent='引用卖点库 ↗';rb.addEventListener('click',function(){openRef(actualIdx,'dynf_'+actualIdx);});lbl.innerHTML=cat.emoji+' '+esc(cat.name)+' ';lbl.appendChild(rb);var ta=document.createElement('textarea');ta.className='fta tall';ta.id='dynf_'+actualIdx;ta.value=r?r[cat.name]||'':'';grp.appendChild(lbl);grp.appendChild(ta);container.appendChild(grp);});}
 
 function openEdit(id){
   var r=null;products.forEach(function(x){if(x._id===id)r=x;});if(!r)return;
