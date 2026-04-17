@@ -881,7 +881,7 @@ function switchYear(y){
   curYear=y;
   renderYearTabs();
   filtered=products.filter(function(p){return(p._year||2026)===curYear;});
-  if(sortKey)applySort();
+  assignSeqNums();if(sortKey)applySort();
   buildTypeFilter();renderStats();renderTable();
 }
 function renderYearTabs(){
@@ -1175,23 +1175,64 @@ function attachResizeHandles(){document.querySelectorAll('thead th').forEach(fun
 /* ── TABLE ──────────────────────────────────────────────────────────────  */
 function buildTypeFilter(){var types=[];products.forEach(function(r){if(r['产品类型']&&types.indexOf(r['产品类型'])<0)types.push(r['产品类型']);});var s=document.getElementById('typeFilt');while(s.options.length>1)s.remove(1);types.forEach(function(t){var o=document.createElement('option');o.value=t;o.textContent=t;s.appendChild(o);});}
 function renderStats(){var yearProds=products.filter(function(r){return(r._year||2026)===curYear;});var cnt={};yearProds.forEach(function(r){if(r['产品类型'])cnt[r['产品类型']]=(cnt[r['产品类型']]||0)+1;});var html='<div class="stat"><div class="stat-lbl">'+curYear+' 产品总数</div><div class="stat-val" style="color:var(--acc)">'+yearProds.length+'</div></div>';Object.keys(cnt).forEach(function(k){html+='<div class="stat"><div class="stat-lbl">'+k+'</div><div class="stat-val" style="color:'+tc(k).dot+'">'+cnt[k]+'</div></div>';});document.getElementById('statsBar').innerHTML=html;}
+/* Assign sequential numbers per year (used for display and sort) */
+function assignSeqNums(){
+  var byYear={};
+  products.forEach(function(p){var y=p._year||2026;if(!byYear[y])byYear[y]=[];byYear[y].push(p);});
+  Object.keys(byYear).forEach(function(y){
+    byYear[y].sort(function(a,b){return(parseInt(a['编号'])||0)-(parseInt(b['编号'])||0);});
+    byYear[y].forEach(function(p,i){p._seqNum=i+1;});
+  });
+}
+assignSeqNums();
+
+/* Keys whose content gets auto-numbered 1. 2. 3. in the table preview */
+var AUTONUMBER_KEYS=['计算与系统性能','工业稳定运行','工业环境适应','连接与扩展','产品特点','产品介绍','行业痛点','销售亮点','模块构成'];
+function autoNumberVal(val){
+  if(!val||!val.trim())return val;
+  var lines=val.split('\n').filter(function(l){return l.trim();});
+  if(lines.length<=1)return val;
+  return lines.map(function(l,i){
+    // Don't double-number if already starts with "N." or "N、"
+    if(/^\d+[.\.、]/.test(l.trim()))return l.trim();
+    return (i+1)+'. '+l.trim();
+  }).join('\n');
+}
+
 function renderTable(){
-  var cols=getActiveCols();var thead=document.getElementById('theadRow');thead.innerHTML='';
-  cols.forEach(function(col){var th=document.createElement('th');th.setAttribute('data-colkey',col.key);var w=colWidths[col.key]||col.width;th.style.width=w+'px';if(col.key!=='__action__'){th.classList.add('sortable');th.innerHTML=esc(col.label)+'<div class="col-resize"></div>';th.addEventListener('click',function(e){if(e.target.classList.contains('col-resize'))return;doSortByKey(col.key);});}else{th.textContent=col.label;}thead.appendChild(th);});
+  var cols=getActiveCols();
+  var thead=document.getElementById('theadRow');thead.innerHTML='';
+  cols.forEach(function(col){
+    var th=document.createElement('th');
+    th.setAttribute('data-colkey',col.key);
+    var w=colWidths[col.key]||col.width;
+    th.style.width=w+'px';
+    if(col.key!=='__action__'){
+      th.classList.add('sortable');
+      var labelText=esc(col.label);
+      if(sortKey===col.key) labelText+=(sDir===1?' ▲':' ▼');
+      th.innerHTML=labelText+'<div class="col-resize"></div>';
+      th.addEventListener('click',function(e){if(e.target.classList.contains('col-resize'))return;doSortByKey(col.key);});
+    } else {th.textContent=col.label;}
+    thead.appendChild(th);
+  });
   attachResizeHandles();
-  var tbody=document.getElementById('tbody');document.getElementById('cntBadge').textContent='共 '+filtered.length+' 条';
+  var tbody=document.getElementById('tbody');
+  document.getElementById('cntBadge').textContent='共 '+filtered.length+' 条';
   if(!filtered.length){tbody.innerHTML='<tr><td colspan="'+cols.length+'" class="no-data">没有匹配的产品</td></tr>';return;}
   tbody.innerHTML='';
-  var displayRows=sortKey?filtered.slice():filtered.slice().sort(function(a,b){return(parseInt(a['编号'])||0)-(parseInt(b['编号'])||0);});
+  var displayRows=sortKey?filtered.slice():filtered.slice().sort(function(a,b){return(a._seqNum||0)-(b._seqNum||0);});
   displayRows.forEach(function(r,rowIdx){
-    var tr=document.createElement('tr');tr.addEventListener('click',function(){openEdit(r._id);});
+    var tr=document.createElement('tr');
+    tr.addEventListener('click',function(){openEdit(r._id);});
     cols.forEach(function(col){
       var td=document.createElement('td');
       if(col.key==='__action__'){
         td.addEventListener('click',function(e){e.stopPropagation();});
         var g=document.createElement('div');g.style.cssText='display:flex;gap:5px;';
-        var eb=document.createElement('button');eb.className='btn btn-ghost';eb.style.cssText='padding:3px 9px;font-size:11px';eb.textContent='✏ 编辑';eb.addEventListener('click',function(){openEdit(r._id);});g.appendChild(eb);
-        td.appendChild(g);
+        var eb=document.createElement('button');eb.className='btn btn-ghost';eb.style.cssText='padding:3px 9px;font-size:11px';
+        eb.textContent='✏ 编辑';eb.addEventListener('click',function(){openEdit(r._id);});
+        g.appendChild(eb);td.appendChild(g);
       } else if(col.key==='编号'){
         td.classList.add('mono');td.style.color='var(--txt3)';td.textContent=String(rowIdx+1);
       } else if(col.key==='产品类型'){
@@ -1202,16 +1243,25 @@ function renderTable(){
         if(sol.en&&(sol.en.product||sol.en.solution)) b+='<span class="sol-badge en">EN</span>';
         td.innerHTML=b||'<span style="color:var(--txt3);font-size:11px">—</span>';
       } else {
-        var val=String(r[col.key]||'');td.title=val;if(col.key==='料号'||col.key==='型号')td.classList.add('mono');if(col.key==='时间')td.style.fontSize='12px';td.textContent=val.length>50?val.substring(0,50)+'…':val;
+        var raw=String(r[col.key]||'');
+        var val=AUTONUMBER_KEYS.indexOf(col.key)>=0?autoNumberVal(raw):raw;
+        td.title=raw;
+        td.style.whiteSpace='pre-wrap';td.style.wordBreak='break-word';
+        if(col.key==='料号'||col.key==='型号')td.classList.add('mono');
+        if(col.key==='时间')td.style.fontSize='12px';
+        td.textContent=val.length>120?val.substring(0,120)+'…':val;
       }
       tr.appendChild(td);
     });tbody.appendChild(tr);
   });
 }
 function doFilter(){var q=document.getElementById('srch').value.toLowerCase();var type=document.getElementById('typeFilt').value;filtered=products.filter(function(r){return(r._year||2026)===curYear&&(!type||r['产品类型']===type)&&(!q||JSON.stringify(r).toLowerCase().indexOf(q)>=0);});if(sortKey)applySort();renderTable();}
-function doSortByKey(key){if(sortKey===key)sDir=-sDir;else{sortKey=key;sDir=1;}document.querySelectorAll('thead th').forEach(function(th){th.classList.remove('sa','sd');if(th.getAttribute('data-colkey')===key)th.classList.add(sDir===1?'sa':'sd');});applySort();renderTable();}
+function doSortByKey(key){
+  if(sortKey===key){sDir=-sDir;}else{sortKey=key;sDir=1;}
+  applySort();renderTable();
+}
 function applySort(){filtered.sort(function(a,b){
-  if(sortKey==='编号'){var na=parseInt(a['编号'])||0,nb=parseInt(b['编号'])||0;return(na-nb)*sDir;}
+  if(sortKey==='编号'){return((a._seqNum||0)-(b._seqNum||0))*sDir;}
   return(String(a[sortKey]||'')).localeCompare(String(b[sortKey]||''),'zh')*sDir;
 });}
 
@@ -1307,9 +1357,9 @@ function saveProduct(){
   else{data._id=Date.now();products.push(data);pid=data._id;buildTypeFilter();}
   solutions[String(pid)]={zh:solZh,en:solEn};
   filtered=products.filter(function(p){return(p._year||2026)===curYear;});
-  if(sortKey)applySort();renderStats();renderYearTabs();renderTable();persist();editDirty=false;closeEdit();toast('保存成功');
+  assignSeqNums();if(sortKey)applySort();renderStats();renderYearTabs();renderTable();persist();editDirty=false;closeEdit();toast('保存成功');
 }
-function delProduct(){if(!confirm('确认删除该产品？'))return;delete solutions[String(editId)];products=products.filter(function(p){return p._id!==editId;});filtered=products.filter(function(p){return(p._year||2026)===curYear;});if(sortKey)applySort();renderStats();renderYearTabs();renderTable();persist();editDirty=false;closeEdit();toast('已删除');}
+function delProduct(){if(!confirm('确认删除该产品？'))return;delete solutions[String(editId)];products=products.filter(function(p){return p._id!==editId;});filtered=products.filter(function(p){return(p._year||2026)===curYear;});assignSeqNums();if(sortKey)applySort();renderStats();renderYearTabs();renderTable();persist();editDirty=false;closeEdit();toast('已删除');}
 
 /* ── SOLUTION PREVIEW & PDF ──────────────────────────────────────────── */
 function previewSol(lang) {
@@ -1773,52 +1823,97 @@ function applySheet2Style(ws,nCols,totalRows){
 
 function exportExcel(){
   var wb=XLSX.utils.book_new();
+
+  /* ── Sheet 1: 产品学习总结表（每年一 Sheet） ── */
+  /* Only include cats that are added to the product summary table (not hideFromTable) */
+  var extraCats=sel.cats.slice(4).filter(function(c){return !c.hideFromTable;});
   var h1=['编号','年份','日期','产品类型','型号','料号','料号描述',
           '计算与系统性能能力','工业稳定运行能力','工业环境适应能力','连接与扩展能力',
           '模块构成','产品特点','产品介绍','行业痛点','销售亮点','应用场景'];
-  sel.cats.slice(4).forEach(function(c){h1.push(c.name);});
+  extraCats.forEach(function(c){h1.push(c.name);});
+
+  /* Helper: auto-number multi-line text for export */
+  function fmtCell(val){
+    if(!val||!val.trim())return '';
+    var lines=val.split('\n').filter(function(l){return l.trim();});
+    if(lines.length<=1)return val.trim();
+    return lines.map(function(l,i){
+      if(/^\d+[.、\)）]/.test(l.trim()))return l.trim();
+      return (i+1)+'. '+l.trim();
+    }).join('\n');
+  }
 
   var years=getYears();
   years.forEach(function(yr){
-    /* Sort by numeric 编号 before export */
     var yProds=products.filter(function(r){return(r._year||2026)===yr;})
-      .slice().sort(function(a,b){return(parseInt(a['编号'])||0)-(parseInt(b['编号'])||0);});
+      .slice().sort(function(a,b){return(a._seqNum||parseInt(a['编号'])||0)-(b._seqNum||parseInt(b['编号'])||0);});
+
     var r1=yProds.map(function(r,idx){
-      /* Auto-generate sequential numbers */
-      var row=[idx+1, yr, r['时间'], r['产品类型'], r['型号'], r['料号'], r['料号描述'],
-               r['计算与系统性能'], r['工业稳定运行'], r['工业环境适应'], r['连接与扩展'],
-               r['模块构成'], r['产品特点'], r['产品介绍'], r['行业痛点'], r['销售亮点'], r['应用场景']];
-      sel.cats.slice(4).forEach(function(c){row.push(r[c.name]||'');});
+      var row=[idx+1, yr, r['时间']||'', r['产品类型']||'', r['型号']||'', r['料号']||'', r['料号描述']||'',
+               fmtCell(r['计算与系统性能']), fmtCell(r['工业稳定运行']),
+               fmtCell(r['工业环境适应']), fmtCell(r['连接与扩展']),
+               fmtCell(r['模块构成']), fmtCell(r['产品特点']),
+               fmtCell(r['产品介绍']), fmtCell(r['行业痛点']),
+               fmtCell(r['销售亮点']), r['应用场景']||''];
+      extraCats.forEach(function(c){row.push(fmtCell(r[c.name])||'');});
       return row;
     });
+
     var ws=XLSX.utils.aoa_to_sheet([h1].concat(r1));
-    /* Column widths: #=6, 年份=8, 日期=12, 类型=14, 型号=18, 料号=18, 料号描述=28, rest=32 */
-    var colWs=[6,8,12,14,18,18,28];
-    while(colWs.length<h1.length) colWs.push(32);
-    ws['!cols']=colWs.map(function(w){return{wch:w};});
-    /* Row heights: header=32, data=70 */
-    ws['!rows']=[{hpt:32}];
-    for(var ri=0;ri<r1.length;ri++) ws['!rows'].push({hpt:70});
-    /* Freeze header row */
+
+    /* Column widths (wch = approx chars) */
+    var baseWidths=[5,6,11,14,18,18,26,38,38,38,38,28,22,42,42,42,16];
+    extraCats.forEach(function(){baseWidths.push(38);});
+    ws['!cols']=baseWidths.map(function(w){return{wch:w};});
+
+    /* Row heights: header tall, data rows auto-sized generously */
+    ws['!rows']=[{hpt:36}];
+    r1.forEach(function(row){
+      /* Estimate max lines in this row to set row height */
+      var maxLines=1;
+      row.forEach(function(cell){
+        if(typeof cell==='string'){
+          var lines=cell.split('\n').length;
+          if(lines>maxLines)maxLines=lines;
+        }
+      });
+      /* Each line ~18pt, min 24pt */
+      ws['!rows'].push({hpt:Math.max(24, Math.min(maxLines*18, 300))});
+    });
+
+    /* Freeze first row */
     ws['!freeze']={xSplit:0,ySplit:1,topLeftCell:'A2',activePane:'bottomLeft'};
     applyHdrStyle(ws, h1.length, r1.length);
     XLSX.utils.book_append_sheet(wb, ws, yr+'产品学习总结表');
   });
 
-  /* Sheet 2: SELECTION 卖点库 */
-  var catNames=sel.cats.map(function(c){return c.name;});
-  var h2=['序号'].concat(catNames);
-  var sh=[''].concat(sel.cats.map(function(c){return sel.sub_headers[c.name]||'';}));
-  var r2=sel.items.map(function(it,idx){
-    return[idx+1].concat(catNames.map(function(cn){return it[cn]||'';}));
-  });
-  var ws2=XLSX.utils.aoa_to_sheet([h2,sh].concat(r2));
-  ws2['!cols']=[{wch:6}].concat(catNames.map(function(){return{wch:42};}));
-  ws2['!rows']=[{hpt:32},{hpt:40}];
-  for(var ri2=0;ri2<r2.length;ri2++) ws2['!rows'].push({hpt:72});
-  ws2['!freeze']={xSplit:0,ySplit:2,topLeftCell:'A3',activePane:'bottomLeft'};
-  applySheet2Style(ws2, h2.length, r2.length+2);
-  XLSX.utils.book_append_sheet(wb, ws2, 'SELECTION卖点库');
+  /* ── Sheet 2: SELECTION卖点库（只导出加入产品表的分类列） ── */
+  /* Only include cats that are shown in the product summary table */
+  var selCatsForExport=sel.cats.filter(function(c){return !c.hideFromTable;});
+  if(selCatsForExport.length>0){
+    var catNames=selCatsForExport.map(function(c){return c.name;});
+    var h2=['序号'].concat(catNames);
+    var sh=[''].concat(selCatsForExport.map(function(c){return sel.sub_headers[c.name]||'';}));
+    /* Only export items that have content in at least one of these cats */
+    var exportItems=sel.items.filter(function(it){
+      return catNames.some(function(cn){return (it[cn]||'').trim();});
+    });
+    var r2=exportItems.map(function(it,idx){
+      return[idx+1].concat(catNames.map(function(cn){return it[cn]||'';}));
+    });
+    var ws2=XLSX.utils.aoa_to_sheet([h2,sh].concat(r2));
+    var selWidths=[5].concat(catNames.map(function(){return 44;}));
+    ws2['!cols']=selWidths.map(function(w){return{wch:w};});
+    ws2['!rows']=[{hpt:36},{hpt:30}];
+    r2.forEach(function(row){
+      var maxLines=1;
+      row.forEach(function(cell){if(typeof cell==='string'){var l=cell.split('\n').length;if(l>maxLines)maxLines=l;}});
+      ws2['!rows'].push({hpt:Math.max(24,Math.min(maxLines*18,300))});
+    });
+    ws2['!freeze']={xSplit:0,ySplit:2,topLeftCell:'A3',activePane:'bottomLeft'};
+    applySheet2Style(ws2, h2.length, r2.length+2);
+    XLSX.utils.book_append_sheet(wb, ws2, 'SELECTION卖点库');
+  }
 
   var ts=new Date().toISOString().slice(0,10).replace(/-/g,'');
   XLSX.writeFile(wb,'产品学习-Everly-'+ts+'.xlsx');
