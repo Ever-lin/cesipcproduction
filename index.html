@@ -55,7 +55,9 @@ table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;}
 thead th{background:var(--sur2);padding:10px 13px;text-align:left;font-weight:600;font-size:11px;color:var(--txt3);letter-spacing:.4px;text-transform:uppercase;border-bottom:1px solid var(--bdr);white-space:nowrap;position:relative;overflow:hidden;}
 thead th.sortable{cursor:pointer;}thead th.sortable:hover{color:var(--txt2);}
 thead th.sa::after{content:' ▲';font-size:9px;}thead th.sd::after{content:' ▼';font-size:9px;}
-.col-resize{position:absolute;right:0;top:0;bottom:0;width:4px;cursor:col-resize;background:transparent;}.col-resize:hover,.col-resize.dragging{background:var(--acc);}
+.col-resize{position:absolute;right:0;top:0;bottom:0;width:4px;cursor:col-resize;background:transparent;z-index:2;}.col-resize:hover,.col-resize.dragging{background:var(--acc);}
+.row-resize{position:absolute;bottom:0;left:0;right:0;height:4px;cursor:row-resize;background:transparent;z-index:2;}.row-resize:hover,.row-resize.dragging{background:var(--acc);}
+tbody tr{position:relative;}
 tbody tr{border-bottom:1px solid var(--bdr);transition:background .12s;cursor:pointer;}
 tbody tr:last-child{border-bottom:none;}tbody tr:hover{background:var(--sur2);}
 tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -1170,7 +1172,59 @@ function getActiveCols(){var defs=getAllColDefs();var active=[];defs.forEach(fun
 
 /* ── RESIZE ─────────────────────────────────────────────────────────────  */
 var resizing=null;
-function attachResizeHandles(){document.querySelectorAll('thead th').forEach(function(th){var key=th.getAttribute('data-colkey');if(!key||key==='__action__')return;var handle=th.querySelector('.col-resize');if(!handle)return;handle.addEventListener('mousedown',function(e){e.preventDefault();resizing={th:th,key:key,startX:e.clientX,startW:th.offsetWidth};handle.classList.add('dragging');});});document.addEventListener('mousemove',function(e){if(!resizing)return;var w=Math.max(50,resizing.startW+(e.clientX-resizing.startX));resizing.th.style.width=w+'px';colWidths[resizing.key]=w;});document.addEventListener('mouseup',function(){if(!resizing)return;var h=resizing.th.querySelector('.col-resize');if(h)h.classList.remove('dragging');resizing=null;persist();});}
+/* ── COL RESIZE ── */
+function attachResizeHandles(){
+  document.querySelectorAll('thead th').forEach(function(th){
+    var key=th.getAttribute('data-colkey');if(!key||key==='__action__')return;
+    var handle=th.querySelector('.col-resize');if(!handle)return;
+    handle.addEventListener('mousedown',function(e){
+      e.preventDefault();
+      resizing={type:'col',th:th,key:key,startX:e.clientX,startW:th.offsetWidth};
+      handle.classList.add('dragging');
+    });
+  });
+}
+/* ── ROW RESIZE ── */
+var rowHeights={};
+var rowResizing=null;
+function attachRowResizeHandles(){
+  document.querySelectorAll('#tbody tr').forEach(function(tr,idx){
+    /* remove old handle if any */
+    var old=tr.querySelector('.row-resize');if(old)old.remove();
+    var handle=document.createElement('div');handle.className='row-resize';
+    tr.appendChild(handle);
+    handle.addEventListener('mousedown',function(e){
+      e.preventDefault();e.stopPropagation();
+      rowResizing={tr:tr,idx:idx,startY:e.clientY,startH:tr.offsetHeight};
+      handle.classList.add('dragging');
+    });
+  });
+}
+/* Shared mouse handlers */
+document.addEventListener('mousemove',function(e){
+  if(resizing&&resizing.type==='col'){
+    var w=Math.max(50,resizing.startW+(e.clientX-resizing.startX));
+    resizing.th.style.width=w+'px';colWidths[resizing.key]=w;
+  }
+  if(rowResizing){
+    var h=Math.max(24,rowResizing.startH+(e.clientY-rowResizing.startY));
+    rowResizing.tr.style.height=h+'px';
+    rowResizing.tr.querySelectorAll('td').forEach(function(td){td.style.height=h+'px';});
+    rowHeights[rowResizing.idx]=h;
+  }
+});
+document.addEventListener('mouseup',function(){
+  if(resizing){
+    var hh=resizing.type==='col'?resizing.th.querySelector('.col-resize'):null;
+    if(hh)hh.classList.remove('dragging');
+    resizing=null;persist();
+  }
+  if(rowResizing){
+    var rh=rowResizing.tr.querySelector('.row-resize');
+    if(rh)rh.classList.remove('dragging');
+    rowResizing=null;
+  }
+});
 
 /* ── TABLE ──────────────────────────────────────────────────────────────  */
 function buildTypeFilter(){var types=[];products.forEach(function(r){if(r['产品类型']&&types.indexOf(r['产品类型'])<0)types.push(r['产品类型']);});var s=document.getElementById('typeFilt');while(s.options.length>1)s.remove(1);types.forEach(function(t){var o=document.createElement('option');o.value=t;o.textContent=t;s.appendChild(o);});}
@@ -1186,18 +1240,7 @@ function assignSeqNums(){
 }
 assignSeqNums();
 
-/* Keys whose content gets auto-numbered 1. 2. 3. in the table preview */
-var AUTONUMBER_KEYS=['计算与系统性能','工业稳定运行','工业环境适应','连接与扩展','产品特点','产品介绍','行业痛点','销售亮点','模块构成'];
-function autoNumberVal(val){
-  if(!val||!val.trim())return val;
-  var lines=val.split('\n').filter(function(l){return l.trim();});
-  if(lines.length<=1)return val;
-  return lines.map(function(l,i){
-    // Don't double-number if already starts with "N." or "N、"
-    if(/^\d+[.\.、]/.test(l.trim()))return l.trim();
-    return (i+1)+'. '+l.trim();
-  }).join('\n');
-}
+
 
 function renderTable(){
   var cols=getActiveCols();
@@ -1217,6 +1260,7 @@ function renderTable(){
     thead.appendChild(th);
   });
   attachResizeHandles();
+  setTimeout(attachRowResizeHandles,0);
   var tbody=document.getElementById('tbody');
   document.getElementById('cntBadge').textContent='共 '+filtered.length+' 条';
   if(!filtered.length){tbody.innerHTML='<tr><td colspan="'+cols.length+'" class="no-data">没有匹配的产品</td></tr>';return;}
@@ -1243,13 +1287,11 @@ function renderTable(){
         if(sol.en&&(sol.en.product||sol.en.solution)) b+='<span class="sol-badge en">EN</span>';
         td.innerHTML=b||'<span style="color:var(--txt3);font-size:11px">—</span>';
       } else {
-        var raw=String(r[col.key]||'');
-        var val=AUTONUMBER_KEYS.indexOf(col.key)>=0?autoNumberVal(raw):raw;
-        td.title=raw;
-        td.style.whiteSpace='pre-wrap';td.style.wordBreak='break-word';
+        var val=String(r[col.key]||'');
+        td.title=val;
         if(col.key==='料号'||col.key==='型号')td.classList.add('mono');
         if(col.key==='时间')td.style.fontSize='12px';
-        td.textContent=val.length>120?val.substring(0,120)+'…':val;
+        td.textContent=val.length>60?val.substring(0,60)+'…':val;
       }
       tr.appendChild(td);
     });tbody.appendChild(tr);
@@ -1824,21 +1866,20 @@ function applySheet2Style(ws,nCols,totalRows){
 function exportExcel(){
   var wb=XLSX.utils.book_new();
 
-  /* ── Sheet 1: 产品学习总结表（每年一 Sheet） ── */
-  /* Only include cats that are added to the product summary table (not hideFromTable) */
+  /* Only extra cats that appear in the product summary table */
   var extraCats=sel.cats.slice(4).filter(function(c){return !c.hideFromTable;});
   var h1=['编号','年份','日期','产品类型','型号','料号','料号描述',
           '计算与系统性能能力','工业稳定运行能力','工业环境适应能力','连接与扩展能力',
           '模块构成','产品特点','产品介绍','行业痛点','销售亮点','应用场景'];
   extraCats.forEach(function(c){h1.push(c.name);});
 
-  /* Helper: auto-number multi-line text for export */
+  /* Helper: auto-number multi-line content in Excel cells */
   function fmtCell(val){
     if(!val||!val.trim())return '';
     var lines=val.split('\n').filter(function(l){return l.trim();});
     if(lines.length<=1)return val.trim();
     return lines.map(function(l,i){
-      if(/^\d+[.、\)）]/.test(l.trim()))return l.trim();
+      if(/^\d+[.、\)\uff09]/.test(l.trim()))return l.trim();
       return (i+1)+'. '+l.trim();
     }).join('\n');
   }
@@ -1861,59 +1902,33 @@ function exportExcel(){
 
     var ws=XLSX.utils.aoa_to_sheet([h1].concat(r1));
 
-    /* Column widths (wch = approx chars) */
-    var baseWidths=[5,6,11,14,18,18,26,38,38,38,38,28,22,42,42,42,16];
-    extraCats.forEach(function(){baseWidths.push(38);});
+    /* Column widths — wide enough to read all content without wrapping */
+    /* #=5, 年份=7, 日期=12, 类型=14, 型号=20, 料号=20, 料号描述=30, 详细内容列=50, 应用场景=18 */
+    var baseWidths=[5,7,12,14,20,20,30,50,50,50,50,36,26,50,50,50,18];
+    extraCats.forEach(function(){baseWidths.push(50);});
     ws['!cols']=baseWidths.map(function(w){return{wch:w};});
 
-    /* Row heights: header tall, data rows auto-sized generously */
+    /* Row heights: header 36pt, data rows auto based on line count */
     ws['!rows']=[{hpt:36}];
     r1.forEach(function(row){
-      /* Estimate max lines in this row to set row height */
       var maxLines=1;
       row.forEach(function(cell){
-        if(typeof cell==='string'){
-          var lines=cell.split('\n').length;
-          if(lines>maxLines)maxLines=lines;
+        if(typeof cell==='string'&&cell){
+          var n=cell.split('\n').length;
+          if(n>maxLines)maxLines=n;
         }
       });
-      /* Each line ~18pt, min 24pt */
-      ws['!rows'].push({hpt:Math.max(24, Math.min(maxLines*18, 300))});
+      /* 18pt per line, min 22pt, max 400pt */
+      ws['!rows'].push({hpt:Math.min(Math.max(maxLines*18,22),400)});
     });
 
-    /* Freeze first row */
+    /* Freeze header */
     ws['!freeze']={xSplit:0,ySplit:1,topLeftCell:'A2',activePane:'bottomLeft'};
     applyHdrStyle(ws, h1.length, r1.length);
     XLSX.utils.book_append_sheet(wb, ws, yr+'产品学习总结表');
   });
 
-  /* ── Sheet 2: SELECTION卖点库（只导出加入产品表的分类列） ── */
-  /* Only include cats that are shown in the product summary table */
-  var selCatsForExport=sel.cats.filter(function(c){return !c.hideFromTable;});
-  if(selCatsForExport.length>0){
-    var catNames=selCatsForExport.map(function(c){return c.name;});
-    var h2=['序号'].concat(catNames);
-    var sh=[''].concat(selCatsForExport.map(function(c){return sel.sub_headers[c.name]||'';}));
-    /* Only export items that have content in at least one of these cats */
-    var exportItems=sel.items.filter(function(it){
-      return catNames.some(function(cn){return (it[cn]||'').trim();});
-    });
-    var r2=exportItems.map(function(it,idx){
-      return[idx+1].concat(catNames.map(function(cn){return it[cn]||'';}));
-    });
-    var ws2=XLSX.utils.aoa_to_sheet([h2,sh].concat(r2));
-    var selWidths=[5].concat(catNames.map(function(){return 44;}));
-    ws2['!cols']=selWidths.map(function(w){return{wch:w};});
-    ws2['!rows']=[{hpt:36},{hpt:30}];
-    r2.forEach(function(row){
-      var maxLines=1;
-      row.forEach(function(cell){if(typeof cell==='string'){var l=cell.split('\n').length;if(l>maxLines)maxLines=l;}});
-      ws2['!rows'].push({hpt:Math.max(24,Math.min(maxLines*18,300))});
-    });
-    ws2['!freeze']={xSplit:0,ySplit:2,topLeftCell:'A3',activePane:'bottomLeft'};
-    applySheet2Style(ws2, h2.length, r2.length+2);
-    XLSX.utils.book_append_sheet(wb, ws2, 'SELECTION卖点库');
-  }
+  /* ── No SELECTION sheet exported ── */
 
   var ts=new Date().toISOString().slice(0,10).replace(/-/g,'');
   XLSX.writeFile(wb,'产品学习-Everly-'+ts+'.xlsx');
