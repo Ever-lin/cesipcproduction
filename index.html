@@ -1291,7 +1291,7 @@ function renderTable(){
         eb.textContent='✏ 编辑';eb.addEventListener('click',function(){openEdit(r._id);});
         g.appendChild(eb);td.appendChild(g);
       } else if(col.key==='编号'){
-        td.classList.add('mono');td.style.color='var(--txt3)';td.textContent=String(rowIdx+1);
+        td.classList.add('mono');td.style.color='var(--txt3)';td.textContent=String(r._seqNum||rowIdx+1);
       } else if(col.isStatusField||(function(){return statusFields.some(function(sf){return sf.key===col.key;});})()){
         var sfDef=statusFields.find(function(sf){return sf.key===col.key;})||{};
         var sfVal=r[col.key]||'';
