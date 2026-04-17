@@ -529,20 +529,12 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
         <div class="fgrp full"><label class="flbl">🔗 连接与扩展 <span class="ref-btn" data-catidx="3">引用卖点库 ↗</span></label><textarea class="fta tall" id="f_conn"></textarea></div>
         <div class="fgrp full" id="dynFieldsSection" style="display:none"><div class="dyn-fields"><div class="dyn-field-label">自定义分类字段</div><div id="dynFields"></div></div></div>
         <div class="fgrp full"><label class="flbl">🧩 模块构成</label><textarea class="fta" id="f_module"></textarea></div>
-        <div class="fgrp full"><label class="flbl">✨ 产品特点</label><input class="fi" id="f_feat"></div>
-        <div class="fgrp full">
-          <label class="flbl">💡 产品介绍</label>
-          <div id="rich_f_intro"></div>
-        </div>
-        <div class="fgrp full">
-          <label class="flbl">❗ 行业痛点</label>
-          <div id="rich_f_pain"></div>
-        </div>
-        <div class="fgrp full">
-          <label class="flbl">🏆 销售亮点</label>
-          <div id="rich_f_high"></div>
-        </div>
-        <div class="fgrp"><label class="flbl">🌍 应用场景</label><input class="fi" id="f_scene"></div>
+        <div class="fgrp full"><label class="flbl">🎯 产品定位</label><input class="fi" id="f_positioning" placeholder="一句话行业定位，如：专为食品厂设计的防水工控机"></div>
+        <div class="fgrp full"><label class="flbl">⭐ 核心卖点</label><textarea class="fta tall" id="f_selling"></textarea></div>
+        <div class="fgrp full"><label class="flbl">🏭 典型行业</label><input class="fi" id="f_industry" placeholder="如：自动化生产线、包装机械、半导体设备"></div>
+        <div class="fgrp full"><label class="flbl">❗ 客户痛点</label><textarea class="fta tall" id="f_pain2"></textarea></div>
+        <div class="fgrp full"><label class="flbl">✅ 我们的解决方案</label><textarea class="fta tall" id="f_solution2"></textarea></div>
+        <div class="fgrp full"><label class="flbl">📌 实际案例</label><textarea class="fta" id="f_case" placeholder="如：Philips工厂智能考勤项目使用PANELMATE 21.5″ IPC完成数据采集与控制"></textarea></div>
         <div class="fgrp"><label class="flbl">编号 <span style="font-size:10px;color:var(--acc2);font-weight:400;text-transform:none;letter-spacing:0">（导出时自动生成）</span></label><input class="fi" id="f_num" readonly style="color:var(--txt3);background:var(--sur3);cursor:default" placeholder="导出时自动按顺序编号"></div>
       </div>
     </div>
@@ -852,8 +844,9 @@ var ALL_COL_DEFS = [
   {key:'编号',label:'#',width:50,fixed:true},{key:'时间',label:'日期',width:90},
   {key:'产品类型',label:'类型',width:110},{key:'型号',label:'型号',width:145},
   {key:'料号',label:'料号',width:130},{key:'料号描述',label:'料号描述',width:200},
-  {key:'产品特点',label:'产品特点',width:160},{key:'应用场景',label:'应用场景',width:130},
-  {key:'行业痛点',label:'行业痛点',width:160},{key:'销售亮点',label:'销售亮点',width:160},
+  {key:'产品定位',label:'产品定位',width:160},{key:'核心卖点',label:'核心卖点',width:160},
+  {key:'典型行业',label:'典型行业',width:140},{key:'客户痛点',label:'客户痛点',width:160},
+  {key:'我们的解决方案',label:'解决方案',width:160},{key:'实际案例',label:'实际案例',width:180},
   {key:'_sol',label:'Solution',width:110}
 ];
 var TC={'EPC BOX PC':{cls:'t-blu',dot:'#5b8dee'},'EPC PANEL PC':{cls:'t-grn',dot:'#43d9a0'},'UTC':{cls:'t-gld',dot:'#f0a84a'},'AI':{cls:'t-pur',dot:'#c678dd'},'WPC':{cls:'t-org',dot:'#ffa03c'}};
@@ -868,11 +861,11 @@ function loadState(){
     return{
       products:p?JSON.parse(p):INITIAL.sheet1.map(function(r,i){return Object.assign({},r,{_id:i+1});}),
       sel:s?JSON.parse(s):INITIAL.sheet2,
-      visibleCols:c?JSON.parse(c):['编号','时间','产品类型','型号','料号','料号描述','产品特点','应用场景','_sol'],
+      visibleCols:c?JSON.parse(c):['编号','时间','产品类型','型号','料号','产品定位','核心卖点','典型行业','_sol'],
       colWidths:cw?JSON.parse(cw):{},solutions:sols?JSON.parse(sols):{},
       statusFields:sf?JSON.parse(sf):[{key:'归档',label:'归档',options:['有','无'],emoji:'📁'}]
     };
-  }catch(e){return{products:INITIAL.sheet1.map(function(r,i){return Object.assign({},r,{_id:i+1});}),sel:INITIAL.sheet2,visibleCols:['编号','时间','产品类型','型号','料号','料号描述','产品特点','应用场景','_sol'],colWidths:{},solutions:{},statusFields:[{key:'归档',label:'归档',options:['有','无'],emoji:'📁'}]};}
+  }catch(e){return{products:INITIAL.sheet1.map(function(r,i){return Object.assign({},r,{_id:i+1});}),sel:INITIAL.sheet2,visibleCols:['编号','时间','产品类型','型号','料号','产品定位','核心卖点','典型行业','_sol'],colWidths:{},solutions:{},statusFields:[{key:'归档',label:'归档',options:['有','无'],emoji:'📁'}]};}
 }
 var st=loadState(),products=st.products,sel=st.sel,visibleCols=st.visibleCols,colWidths=st.colWidths,solutions=st.solutions,statusFields=st.statusFields;
 if(!sel.cats) sel.cats=DEFAULT_CATS.map(function(c){return Object.assign({},c);});
@@ -1328,9 +1321,9 @@ function applySort(){filtered.sort(function(a,b){
 });}
 
 /* ── EDIT MODAL ─────────────────────────────────────────────────────────  */
-var STATIC_FMAP={f_num:'编号',f_date:'时间',f_type:'产品类型',f_model:'型号',f_pn:'料号',f_desc:'料号描述',f_perf:'计算与系统性能',f_stab:'工业稳定运行',f_env:'工业环境适应',f_conn:'连接与扩展',f_module:'模块构成',f_feat:'产品特点',f_scene:'应用场景'};
+var STATIC_FMAP={f_num:'编号',f_date:'时间',f_type:'产品类型',f_model:'型号',f_pn:'料号',f_desc:'料号描述',f_perf:'计算与系统性能',f_stab:'工业稳定运行',f_env:'工业环境适应',f_conn:'连接与扩展',f_module:'模块构成',f_positioning:'产品定位',f_selling:'核心卖点',f_industry:'典型行业',f_pain2:'客户痛点',f_solution2:'我们的解决方案',f_case:'实际案例'};
 // Rich-editor product fields: {fieldId: dataKey}
-var RICH_PROD_FIELDS={f_intro:'产品介绍',f_pain:'行业痛点',f_high:'销售亮点'};
+var RICH_PROD_FIELDS={};
 var _richProdEditors={}; // keyed by field id -> rich body element
 
 function initRichProdField(fid,lang,r){
@@ -1893,7 +1886,7 @@ function exportExcel(){
   var extraCats=sel.cats.slice(4).filter(function(c){return !c.hideFromTable;});
   var h1=['编号','年份','日期','产品类型','型号','料号','料号描述',
           '计算与系统性能能力','工业稳定运行能力','工业环境适应能力','连接与扩展能力',
-          '模块构成','产品特点','产品介绍','行业痛点','销售亮点','应用场景'];
+          '模块构成','产品定位','核心卖点','典型行业','客户痛点','我们的解决方案','实际案例'];
   extraCats.forEach(function(c){h1.push(c.name);});
 
 
@@ -1907,9 +1900,9 @@ function exportExcel(){
       var row=[idx+1, yr, r['时间']||'', r['产品类型']||'', r['型号']||'', r['料号']||'', r['料号描述']||'',
                r['计算与系统性能']||'', r['工业稳定运行']||'',
                r['工业环境适应']||'', r['连接与扩展']||'',
-               r['模块构成']||'', r['产品特点']||'',
-               r['产品介绍']||'', r['行业痛点']||'',
-               r['销售亮点']||'', r['应用场景']||''];
+               r['模块构成']||'', r['产品定位']||'',
+               r['核心卖点']||'', r['典型行业']||'',
+               r['客户痛点']||'', r['我们的解决方案']||'', r['实际案例']||''];
       extraCats.forEach(function(c){row.push(r[c.name]||'');});
       return row;
     });
@@ -1918,7 +1911,7 @@ function exportExcel(){
 
     /* Column widths — wide enough to read all content without wrapping */
     /* #=5, 年份=7, 日期=12, 类型=14, 型号=20, 料号=20, 料号描述=30, 详细内容列=50, 应用场景=18 */
-    var baseWidths=[5,7,12,14,20,20,30,50,50,50,50,36,26,50,50,50,18];
+    var baseWidths=[5,7,12,14,20,20,30,50,50,50,50,36,50,50,50,50,50,50];
     extraCats.forEach(function(){baseWidths.push(50);});
     ws['!cols']=baseWidths.map(function(w){return{wch:w};});
 
