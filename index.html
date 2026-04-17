@@ -385,6 +385,7 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
     <select class="fsel" id="typeFilt"><option value="">全部类型</option></select>
     <span class="cnt" id="cntBadge"></span>
     <button class="btn btn-ghost" id="colConfigBtn" style="margin-left:auto">⚙ 自定义列</button>
+    <button class="btn btn-ghost" id="sfMgrBtn" style="color:var(--acc4);border-color:rgba(198,120,221,.3)">＋ 管理状态字段</button>
   </div>
   <div class="col-config" id="colConfig">
     <div class="col-config-title">选择显示的列（点击开关，拖动列右边缘调整宽度）</div>
@@ -517,6 +518,7 @@ tbody td{padding:10px 13px;vertical-align:middle;overflow:hidden;text-overflow:e
       <div class="fg">
         <div class="fgrp"><label class="flbl">日期</label><input class="fi" id="f_date" type="date"></div>
         <div class="fgrp"><label class="flbl">年份（总结表年度）</label><select class="fi" id="f_year"><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option></select></div>
+        <div id="statusFieldsInModal"></div>
         <div class="fgrp"><label class="flbl">产品类型</label><input class="fi" id="f_type"></div>
         <div class="fgrp"><label class="flbl">型号</label><input class="fi" id="f_model"></div>
         <div class="fgrp"><label class="flbl">料号</label><input class="fi" id="f_pn"></div>
@@ -862,16 +864,17 @@ function loadState(){
   try{
     var p=localStorage.getItem('everly_p'),s=localStorage.getItem('everly_s'),
         c=localStorage.getItem('everly_colcfg'),cw=localStorage.getItem('everly_colwidths'),
-        sols=localStorage.getItem('everly_sols');
+        sols=localStorage.getItem('everly_sols'),sf=localStorage.getItem('everly_sf');
     return{
       products:p?JSON.parse(p):INITIAL.sheet1.map(function(r,i){return Object.assign({},r,{_id:i+1});}),
       sel:s?JSON.parse(s):INITIAL.sheet2,
       visibleCols:c?JSON.parse(c):['编号','时间','产品类型','型号','料号','料号描述','产品特点','应用场景','_sol'],
-      colWidths:cw?JSON.parse(cw):{},solutions:sols?JSON.parse(sols):{}
+      colWidths:cw?JSON.parse(cw):{},solutions:sols?JSON.parse(sols):{},
+      statusFields:sf?JSON.parse(sf):[{key:'归档',label:'归档',options:['有','无'],emoji:'📁'}]
     };
-  }catch(e){return{products:INITIAL.sheet1.map(function(r,i){return Object.assign({},r,{_id:i+1});}),sel:INITIAL.sheet2,visibleCols:['编号','时间','产品类型','型号','料号','料号描述','产品特点','应用场景','_sol'],colWidths:{},solutions:{}};}
+  }catch(e){return{products:INITIAL.sheet1.map(function(r,i){return Object.assign({},r,{_id:i+1});}),sel:INITIAL.sheet2,visibleCols:['编号','时间','产品类型','型号','料号','料号描述','产品特点','应用场景','_sol'],colWidths:{},solutions:{},statusFields:[{key:'归档',label:'归档',options:['有','无'],emoji:'📁'}]};}
 }
-var st=loadState(),products=st.products,sel=st.sel,visibleCols=st.visibleCols,colWidths=st.colWidths,solutions=st.solutions;
+var st=loadState(),products=st.products,sel=st.sel,visibleCols=st.visibleCols,colWidths=st.colWidths,solutions=st.solutions,statusFields=st.statusFields;
 if(!sel.cats) sel.cats=DEFAULT_CATS.map(function(c){return Object.assign({},c);});
 if(!sel.sub_headers) sel.sub_headers={};
 sel.items.forEach(function(it,i){if(!it._sid) it._sid='s'+i; sel.cats.forEach(function(c){if(it[c.name]===undefined) it[c.name]='';});});
@@ -915,7 +918,7 @@ function persist(){
   try{
     localStorage.setItem('everly_p',JSON.stringify(products));localStorage.setItem('everly_s',JSON.stringify(sel));
     localStorage.setItem('everly_colcfg',JSON.stringify(visibleCols));localStorage.setItem('everly_colwidths',JSON.stringify(colWidths));
-    localStorage.setItem('everly_sols',JSON.stringify(solutions));
+    localStorage.setItem('everly_sols',JSON.stringify(solutions));localStorage.setItem('everly_sf',JSON.stringify(statusFields));
     var el=document.getElementById('savedMsg');el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(function(){el.classList.remove('show');},1800);
   }catch(e){}
 }
@@ -1165,7 +1168,17 @@ function switchSolLang(lang) {
 }
 
 /* ── COLUMN CONFIG ─────────────────────────────────────────────────────── */
-function getAllColDefs(){var defs=ALL_COL_DEFS.slice();sel.cats.forEach(function(cat){if(cat.hideFromTable)return;var exists=defs.some(function(d){return d.key===cat.name;});if(!exists) defs.push({key:cat.name,label:cat.emoji+' '+cat.name,width:160});});return defs;}
+function getAllColDefs(){
+  var defs=[];
+  ALL_COL_DEFS.forEach(function(d){
+    defs.push(d);
+    if(d.key==='时间'){
+      statusFields.forEach(function(sf){
+        if(!defs.some(function(x){return x.key===sf.key;}))
+          defs.push({key:sf.key,label:(sf.emoji?sf.emoji+' ':'')+sf.label,width:80,isStatusField:true});
+      });
+    }
+  });sel.cats.forEach(function(cat){if(cat.hideFromTable)return;var exists=defs.some(function(d){return d.key===cat.name;});if(!exists) defs.push({key:cat.name,label:cat.emoji+' '+cat.name,width:160});});return defs;}
 function buildColChips(){var defs=getAllColDefs();var grid=document.getElementById('colChips');grid.innerHTML='';defs.forEach(function(def){if(def.fixed)return;var on=visibleCols.indexOf(def.key)>=0;var chip=document.createElement('span');chip.className='col-chip '+(on?'on':'off');chip.textContent=(on?'✓ ':'')+def.label;chip.addEventListener('click',function(){var idx=visibleCols.indexOf(def.key);if(idx>=0)visibleCols.splice(idx,1);else visibleCols.push(def.key);persist();buildColChips();renderTable();});grid.appendChild(chip);});}
 function buildColConfig(){buildColChips();}
 function getActiveCols(){var defs=getAllColDefs();var active=[];defs.forEach(function(d){if(d.key==='编号')active.push(d);});visibleCols.forEach(function(key){if(key==='编号')return;var def=defs.find(function(d){return d.key===key;});if(def)active.push(def);});active.push({key:'__action__',label:'操作',width:100});return active;}
@@ -1279,6 +1292,13 @@ function renderTable(){
         g.appendChild(eb);td.appendChild(g);
       } else if(col.key==='编号'){
         td.classList.add('mono');td.style.color='var(--txt3)';td.textContent=String(rowIdx+1);
+      } else if(col.isStatusField||(function(){return statusFields.some(function(sf){return sf.key===col.key;});})()){
+        var sfDef=statusFields.find(function(sf){return sf.key===col.key;})||{};
+        var sfVal=r[col.key]||'';
+        var sfOpts=sfDef.options||[];
+        var sfIdx=sfOpts.indexOf(sfVal);
+        var sfColors=['t-grn','t-blu','t-gld','t-pur','t-org'];
+        td.innerHTML=sfVal?'<span class="tag '+sfColors[sfIdx%sfColors.length]+'">'+esc(sfVal)+'</span>':'<span style="color:var(--txt3);font-size:11px">—</span>';
       } else if(col.key==='产品类型'){
         var t=tc(r['产品类型']);td.innerHTML='<span class="tag '+t.cls+'">'+esc(r['产品类型']||'—')+'</span>';
       } else if(col.key==='_sol'){
@@ -1299,7 +1319,7 @@ function renderTable(){
 }
 function doFilter(){var q=document.getElementById('srch').value.toLowerCase();var type=document.getElementById('typeFilt').value;filtered=products.filter(function(r){return(r._year||2026)===curYear&&(!type||r['产品类型']===type)&&(!q||JSON.stringify(r).toLowerCase().indexOf(q)>=0);});if(sortKey)applySort();renderTable();}
 function doSortByKey(key){
-  if(sortKey===key){sDir=-sDir;}else{sortKey=key;sDir=1;}
+  if(sortKey===key){sDir=-sDir;}else{sortKey=key;sDir=(key==='编号'?-1:1);}
   applySort();renderTable();
 }
 function applySort(){filtered.sort(function(a,b){
@@ -1338,6 +1358,7 @@ function openEdit(id){
   document.getElementById('editTitle').textContent=r['型号']||'产品详情';
   document.getElementById('editSub').textContent=r['料号']||'';
   document.getElementById('delBtn').style.display='';
+  buildStatusFieldsInModal(r);
   Object.keys(STATIC_FMAP).forEach(function(fid){var el=document.getElementById(fid);if(el)el.value=r[STATIC_FMAP[fid]]||'';});
   var yearEl=document.getElementById('f_year');if(yearEl)yearEl.value=String(r._year||2026);
   Object.keys(RICH_PROD_FIELDS).forEach(function(fid){initRichProdField(fid,'zh',r);});
@@ -1366,6 +1387,7 @@ function openEdit(id){
 }
 function openAdd(){
   editId=null;var maxNum=0;products.forEach(function(p){var n=parseInt(p['编号'])||0;if(n>maxNum)maxNum=n;});
+  buildStatusFieldsInModal(null);
   Object.keys(STATIC_FMAP).forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('f_num').value=String(maxNum+1);document.getElementById('f_date').value=new Date().toISOString().slice(0,10);
   var yearEl=document.getElementById('f_year');if(yearEl)yearEl.value=String(curYear);
@@ -1390,6 +1412,7 @@ function closeEdit(){
 }
 function saveProduct(){
   var data={};Object.keys(STATIC_FMAP).forEach(function(fid){var el=document.getElementById(fid);if(el)data[STATIC_FMAP[fid]]=el.value.trim();});
+  statusFields.forEach(function(sf){var el=document.getElementById('sf_'+sf.key);if(el)data[sf.key]=el.value;});
   var yearEl=document.getElementById('f_year');data._year=yearEl?parseInt(yearEl.value)||2026:2026;
   Object.keys(RICH_PROD_FIELDS).forEach(function(fid){var rd=readRichProdField(fid);data[RICH_PROD_FIELDS[fid]]=rd.body;data[RICH_PROD_FIELDS[fid]+'_rich']=rd.rich;data[RICH_PROD_FIELDS[fid]+'_blocks']=rd.blocks||[];});
   sel.cats.slice(4).forEach(function(cat,i){var el=document.getElementById('dynf_'+(i+4));if(el)data[cat.name]=el.value.trim();});
@@ -1873,16 +1896,7 @@ function exportExcel(){
           '模块构成','产品特点','产品介绍','行业痛点','销售亮点','应用场景'];
   extraCats.forEach(function(c){h1.push(c.name);});
 
-  /* Helper: auto-number multi-line content in Excel cells */
-  function fmtCell(val){
-    if(!val||!val.trim())return '';
-    var lines=val.split('\n').filter(function(l){return l.trim();});
-    if(lines.length<=1)return val.trim();
-    return lines.map(function(l,i){
-      if(/^\d+[.、\)\uff09]/.test(l.trim()))return l.trim();
-      return (i+1)+'. '+l.trim();
-    }).join('\n');
-  }
+
 
   var years=getYears();
   years.forEach(function(yr){
@@ -1891,12 +1905,12 @@ function exportExcel(){
 
     var r1=yProds.map(function(r,idx){
       var row=[idx+1, yr, r['时间']||'', r['产品类型']||'', r['型号']||'', r['料号']||'', r['料号描述']||'',
-               fmtCell(r['计算与系统性能']), fmtCell(r['工业稳定运行']),
-               fmtCell(r['工业环境适应']), fmtCell(r['连接与扩展']),
-               fmtCell(r['模块构成']), fmtCell(r['产品特点']),
-               fmtCell(r['产品介绍']), fmtCell(r['行业痛点']),
-               fmtCell(r['销售亮点']), r['应用场景']||''];
-      extraCats.forEach(function(c){row.push(fmtCell(r[c.name])||'');});
+               r['计算与系统性能']||'', r['工业稳定运行']||'',
+               r['工业环境适应']||'', r['连接与扩展']||'',
+               r['模块构成']||'', r['产品特点']||'',
+               r['产品介绍']||'', r['行业痛点']||'',
+               r['销售亮点']||'', r['应用场景']||''];
+      extraCats.forEach(function(c){row.push(r[c.name]||'');});
       return row;
     });
 
@@ -2002,6 +2016,112 @@ async function translateSolToEn() {
   }
 }
 
+
+/* ── STATUS FIELD MANAGER ─────────────────────────────────────────────── */
+function buildStatusFieldsInModal(r){
+  var container=document.getElementById('statusFieldsInModal');
+  if(!container)return;
+  container.innerHTML='';
+  statusFields.forEach(function(sf){
+    var grp=document.createElement('div');grp.className='fgrp';
+    var lbl=document.createElement('label');lbl.className='flbl';
+    lbl.textContent=(sf.emoji?sf.emoji+' ':'')+sf.label;
+    var sel=document.createElement('select');sel.className='fi';sel.id='sf_'+sf.key;
+    var blankOpt=document.createElement('option');blankOpt.value='';blankOpt.textContent='— 未选择 —';
+    sel.appendChild(blankOpt);
+    sf.options.forEach(function(opt){
+      var o=document.createElement('option');o.value=opt;o.textContent=opt;
+      if(r&&r[sf.key]===opt)o.selected=true;
+      sel.appendChild(o);
+    });
+    grp.appendChild(lbl);grp.appendChild(sel);
+    container.appendChild(grp);
+  });
+}
+
+function renderSfMgrList(){
+  var list=document.getElementById('sfMgrList');
+  if(!list)return;
+  list.innerHTML='';
+  if(!statusFields.length){
+    list.innerHTML='<div style="color:var(--txt3);font-size:12px;padding:8px 0">暂无状态字段，在下方新增</div>';
+    return;
+  }
+  statusFields.forEach(function(sf,idx){
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--sur2);border:1px solid var(--bdr);border-radius:8px;margin-bottom:8px;';
+    var icon=document.createElement('span');icon.textContent=sf.emoji||'🏷';icon.style.fontSize='16px';
+    var info=document.createElement('div');info.style.flex='1';
+    info.innerHTML='<div style="font-weight:600;font-size:13px">'+esc(sf.label)+'</div>'
+      +'<div style="font-size:11px;color:var(--txt3);margin-top:2px">选项：'+sf.options.map(function(o){return esc(o);}).join(' · ')+'</div>';
+    var del=document.createElement('button');del.className='btn btn-danger';del.style.cssText='padding:4px 10px;font-size:11px';
+    del.textContent='删除';
+    del.addEventListener('click',function(){
+      if(!confirm('删除字段「'+sf.label+'」？已填写的数据不会丢失，但列将从表格中移除。'))return;
+      statusFields.splice(idx,1);
+      visibleCols=visibleCols.filter(function(k){return k!==sf.key;});
+      persist();renderSfMgrList();buildColChips();renderTable();
+      toast('已删除字段：'+sf.label);
+    });
+    row.appendChild(icon);row.appendChild(info);row.appendChild(del);
+    list.appendChild(row);
+  });
+}
+
+function openSfMgr(){
+  renderSfMgrList();
+  document.getElementById('sfNewKey').value='';
+  document.getElementById('sfNewEmoji').value='';
+  document.getElementById('sfNewOpts').value='';
+  document.getElementById('sfMgrOv').classList.add('open');
+}
+function closeSfMgr(){document.getElementById('sfMgrOv').classList.remove('open');}
+
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('sfMgrBtn').addEventListener('click',openSfMgr);
+  document.getElementById('sfMgrClose').addEventListener('click',closeSfMgr);
+  document.getElementById('sfMgrOv').addEventListener('click',function(e){if(e.target===this)closeSfMgr();});
+  document.getElementById('sfAddBtn').addEventListener('click',function(){
+    var key=document.getElementById('sfNewKey').value.trim();
+    var emoji=document.getElementById('sfNewEmoji').value.trim();
+    var optsRaw=document.getElementById('sfNewOpts').value.trim();
+    if(!key){toast('请填写字段名称');return;}
+    if(statusFields.some(function(sf){return sf.key===key;})){toast('已存在同名字段');return;}
+    var opts=optsRaw?optsRaw.split(/[,，]/).map(function(s){return s.trim();}).filter(Boolean):['有','无'];
+    statusFields.push({key:key,label:key,options:opts,emoji:emoji||'🏷'});
+    visibleCols.push(key);
+    persist();renderSfMgrList();buildColChips();renderTable();
+    document.getElementById('sfNewKey').value='';
+    document.getElementById('sfNewEmoji').value='';
+    document.getElementById('sfNewOpts').value='';
+    toast('已添加字段：'+key);
+  });
+});
 </script>
+
+<!-- STATUS FIELD MANAGER MODAL -->
+<div class="ov" id="sfMgrOv">
+<div class="modal" style="max-width:520px">
+  <div class="mhdr">
+    <div><div class="mtitle">管理状态字段</div><div class="msub" style="color:var(--txt3)">新增、删除列表中的状态字段，字段会出现在表格和编辑弹窗中</div></div>
+    <button class="mcls" id="sfMgrClose">✕</button>
+  </div>
+  <div class="mbody" style="padding:18px 22px 22px">
+    <div id="sfMgrList" style="margin-bottom:16px"></div>
+    <div style="border-top:1px solid var(--bdr);padding-top:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--acc4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">新增字段</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div class="fgrp"><label class="flbl">字段名称</label><input class="fi" id="sfNewKey" placeholder="如：样品状态"></div>
+        <div class="fgrp"><label class="flbl">图标 Emoji</label><input class="fi" id="sfNewEmoji" placeholder="如：🧪" style="max-width:80px"></div>
+      </div>
+      <div class="fgrp" style="margin-bottom:12px">
+        <label class="flbl">选项（用逗号分隔）</label>
+        <input class="fi" id="sfNewOpts" placeholder="如：有,无  或  待确认,已确认,不适用">
+      </div>
+      <button class="btn btn-prim" id="sfAddBtn">＋ 添加字段</button>
+    </div>
+  </div>
+</div>
+</div>
 </body>
 </html>
