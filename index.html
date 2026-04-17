@@ -846,12 +846,35 @@ var ALL_COL_DEFS = [
   {key:'料号',label:'料号',width:130},{key:'料号描述',label:'料号描述',width:200},
   {key:'产品定位',label:'产品定位',width:160},{key:'核心卖点',label:'核心卖点',width:160},
   {key:'典型行业',label:'典型行业',width:140},{key:'客户痛点',label:'客户痛点',width:160},
-  {key:'我们的解决方案',label:'解决方案',width:160},{key:'实际案例',label:'实际案例',width:180},
-  {key:'_sol',label:'Solution',width:110}
+  {key:'我们的解决方案',label:'解决方案',width:160},{key:'实际案例',label:'实际案例',width:180}
 ];
 var TC={'EPC BOX PC':{cls:'t-blu',dot:'#5b8dee'},'EPC PANEL PC':{cls:'t-grn',dot:'#43d9a0'},'UTC':{cls:'t-gld',dot:'#f0a84a'},'AI':{cls:'t-pur',dot:'#c678dd'},'WPC':{cls:'t-org',dot:'#ffa03c'}};
 function tc(t){return TC[t]||{cls:'t-blu',dot:'#5b8dee'};}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+/* 自动给多行内容加 1. 2. 3. 编号（已有编号则不重复加）*/
+var AUTO_NUM_KEYS=['计算与系统性能','工业稳定运行','工业环境适应','连接与扩展','模块构成','核心卖点','客户痛点','我们的解决方案'];
+function autoNumber(text){
+  if(!text||!text.trim())return text;
+  var lines=text.split('\n');
+  // 如果只有一行，不加编号
+  var nonEmpty=lines.filter(function(l){return l.trim();});
+  if(nonEmpty.length<=1)return text;
+  // 如果已经有编号开头（1. 1、 1） 等），原样返回
+  var firstNE=nonEmpty[0].trim();
+  if(/^\d+[.、）)\s]/.test(firstNE))return text;
+  // 逐行加编号（跳过空行）
+  var n=0;
+  return lines.map(function(l){
+    if(!l.trim())return l;
+    n++;
+    return n+'. '+l.trim();
+  }).join('\n');
+}
+function autoNumberForDisplay(key,text){
+  if(AUTO_NUM_KEYS.indexOf(key)<0)return text;
+  return autoNumber(text);
+}
 
 function loadState(){
   try{
@@ -861,11 +884,11 @@ function loadState(){
     return{
       products:p?JSON.parse(p):INITIAL.sheet1.map(function(r,i){return Object.assign({},r,{_id:i+1});}),
       sel:s?JSON.parse(s):INITIAL.sheet2,
-      visibleCols:c?JSON.parse(c):['编号','时间','产品类型','型号','料号','产品定位','核心卖点','典型行业','_sol'],
+      visibleCols:c?JSON.parse(c):['编号','时间','产品类型','型号','料号','产品定位','核心卖点','典型行业'],
       colWidths:cw?JSON.parse(cw):{},solutions:sols?JSON.parse(sols):{},
       statusFields:sf?JSON.parse(sf):[{key:'归档',label:'归档',options:['有','无'],emoji:'📁'}]
     };
-  }catch(e){return{products:INITIAL.sheet1.map(function(r,i){return Object.assign({},r,{_id:i+1});}),sel:INITIAL.sheet2,visibleCols:['编号','时间','产品类型','型号','料号','产品定位','核心卖点','典型行业','_sol'],colWidths:{},solutions:{},statusFields:[{key:'归档',label:'归档',options:['有','无'],emoji:'📁'}]};}
+  }catch(e){return{products:INITIAL.sheet1.map(function(r,i){return Object.assign({},r,{_id:i+1});}),sel:INITIAL.sheet2,visibleCols:['编号','时间','产品类型','型号','料号','产品定位','核心卖点','典型行业'],colWidths:{},solutions:{},statusFields:[{key:'归档',label:'归档',options:['有','无'],emoji:'📁'}]};}
 }
 var st=loadState(),products=st.products,sel=st.sel,visibleCols=st.visibleCols,colWidths=st.colWidths,solutions=st.solutions,statusFields=st.statusFields;
 if(!sel.cats) sel.cats=DEFAULT_CATS.map(function(c){return Object.assign({},c);});
@@ -1301,10 +1324,11 @@ function renderTable(){
         td.innerHTML=b||'<span style="color:var(--txt3);font-size:11px">—</span>';
       } else {
         var val=String(r[col.key]||'');
-        td.title=val;
+        var displayVal=autoNumberForDisplay(col.key,val);
+        td.title=displayVal;
         if(col.key==='料号'||col.key==='型号')td.classList.add('mono');
         if(col.key==='时间')td.style.fontSize='12px';
-        td.textContent=val.length>60?val.substring(0,60)+'…':val;
+        td.textContent=displayVal.length>80?displayVal.substring(0,80)+'…':displayVal;
       }
       tr.appendChild(td);
     });tbody.appendChild(tr);
@@ -1897,12 +1921,13 @@ function exportExcel(){
       .slice().sort(function(a,b){return(a._seqNum||parseInt(a['编号'])||0)-(b._seqNum||parseInt(b['编号'])||0);});
 
     var r1=yProds.map(function(r,idx){
+      function xv(key){var v=r[key]||'';return autoNumberForDisplay(key,v);}
       var row=[idx+1, yr, r['时间']||'', r['产品类型']||'', r['型号']||'', r['料号']||'', r['料号描述']||'',
-               r['计算与系统性能']||'', r['工业稳定运行']||'',
-               r['工业环境适应']||'', r['连接与扩展']||'',
-               r['模块构成']||'', r['产品定位']||'',
-               r['核心卖点']||'', r['典型行业']||'',
-               r['客户痛点']||'', r['我们的解决方案']||'', r['实际案例']||''];
+               xv('计算与系统性能'), xv('工业稳定运行'),
+               xv('工业环境适应'), xv('连接与扩展'),
+               xv('模块构成'), r['产品定位']||'',
+               xv('核心卖点'), r['典型行业']||'',
+               xv('客户痛点'), xv('我们的解决方案'), r['实际案例']||''];
       extraCats.forEach(function(c){row.push(r[c.name]||'');});
       return row;
     });
